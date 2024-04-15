@@ -156,6 +156,13 @@ public class LocationWorker extends Worker {
         // Create a Calendar instance
         Calendar cal = Calendar.getInstance();
 
+        // Check if today is Saturday or Sunday, if yes, cancel any existing work and return
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
+            WorkManager.getInstance(context).cancelAllWork();
+            return;
+        }
+
         // Set the time to turn on the worker (8:10 AM)
         cal.set(Calendar.HOUR_OF_DAY, 8);
         cal.set(Calendar.MINUTE, 10);
@@ -180,5 +187,6 @@ public class LocationWorker extends Worker {
             // Schedule the worker
             WorkManager.getInstance(context).enqueue(locationWorkerRequestBuilder.build());
         }
+
     }
 }
