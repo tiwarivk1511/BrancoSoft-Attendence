@@ -170,8 +170,8 @@ public class LocationWorker extends Worker {
         long startTime = cal.getTimeInMillis();
 
         // Set the time to turn off the worker (8:00 PM)
-        cal.set(Calendar.HOUR_OF_DAY, 20);
-        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 19);
+        cal.set(Calendar.MINUTE, 30);
         cal.set(Calendar.SECOND, 0);
         long stopTime = cal.getTimeInMillis();
 
