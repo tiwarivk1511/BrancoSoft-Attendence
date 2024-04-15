@@ -43,6 +43,7 @@ public class HomeActivity extends AppCompatActivity {
 
         setSupportActionBar(binding.appBarHome.toolbar);
 
+        LocationWorker.scheduleLocationWorker(getApplicationContext());
 
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
