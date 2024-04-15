@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="statusBarColor">#0295DA</color>
+    <color name="bg_color">#0295DA</color>
+    <color name="screen_bg">#D8D6D6</color>
+</resources>
