@@ -16,6 +16,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -23,8 +25,10 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 public class LocationWorker extends Worker {
 
@@ -32,6 +36,7 @@ public class LocationWorker extends Worker {
 
     public LocationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
+
     }
 
     @Override
@@ -137,6 +142,37 @@ public class LocationWorker extends Worker {
             channel.setDescription(description);
             NotificationManager notificationManager = getApplicationContext().getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
+        }
+    }
+
+    // Schedule the worker to run every day at 8:10 AM
+    public static void scheduleLocationWorker(Context context) {
+        // Create a Calendar instance
+        Calendar cal = Calendar.getInstance();
+
+        // Set the time to turn on the worker (8:10 AM)
+        cal.set(Calendar.HOUR_OF_DAY, 8);
+        cal.set(Calendar.MINUTE, 10);
+        cal.set(Calendar.SECOND, 0);
+        long startTime = cal.getTimeInMillis();
+
+        // Set the time to turn off the worker (8:00 PM)
+        cal.set(Calendar.HOUR_OF_DAY, 20);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        long stopTime = cal.getTimeInMillis();
+
+        // Check if current time is between stop and start time
+        long currentTime = System.currentTimeMillis();
+        boolean shouldRunNow = currentTime > startTime && currentTime < stopTime;
+
+        // If current time is between stop and start time, schedule the worker to run every day
+        if (shouldRunNow) {
+            PeriodicWorkRequest.Builder locationWorkerRequestBuilder =
+                    new PeriodicWorkRequest.Builder(LocationWorker.class, PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
+
+            // Schedule the worker
+            WorkManager.getInstance(context).enqueue(locationWorkerRequestBuilder.build());
         }
     }
 }
