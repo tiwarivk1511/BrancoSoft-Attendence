@@ -177,7 +177,7 @@ public class LocationWorker extends Worker {
 
         // Check if current time is between stop and start time
         long currentTime = System.currentTimeMillis();
-        boolean shouldRunNow = currentTime > startTime && currentTime < stopTime;
+        boolean shouldRunNow = currentTime >= startTime && currentTime <= stopTime;
 
         // If current time is between stop and start time, schedule the worker to run every day
         if (shouldRunNow) {
