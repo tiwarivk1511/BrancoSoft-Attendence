@@ -95,10 +95,12 @@ public class ForgetPasswordActivity extends AppCompatActivity {
                         if (success) {
                             runOnUiThread(() -> {
                                 Toast.makeText(ForgetPasswordActivity.this, "Password reset email sent successfully", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(ForgetPasswordActivity.this, LoginActivity.class);
-                                startActivity(intent);
-                                finish();
                             });
+
+                            Intent intent = new Intent(ForgetPasswordActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                            finish();
+
                         } else {
                             String message = json.getString("message");
                             runOnUiThread(() -> Toast.makeText(ForgetPasswordActivity.this, message, Toast.LENGTH_SHORT).show());
