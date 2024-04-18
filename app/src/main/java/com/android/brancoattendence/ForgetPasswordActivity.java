@@ -3,6 +3,7 @@ package com.android.brancoattendence;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -61,6 +62,8 @@ public class ForgetPasswordActivity extends AppCompatActivity {
     }
 
     private void requestPasswordReset(String email) {
+        binding.progressCircular.setVisibility(View.VISIBLE);
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://192.168.1.11:8000/api/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -77,6 +80,7 @@ public class ForgetPasswordActivity extends AppCompatActivity {
                     ForgetPasswordResponse forgetPasswordResponse = response.body();
                     if (forgetPasswordResponse != null && forgetPasswordResponse.isSuccess()) {
                         Toast.makeText(ForgetPasswordActivity.this, "Password reset email sent successfully", Toast.LENGTH_SHORT).show();
+                        binding.progressCircular.setVisibility(View.GONE);
                         startActivity(new Intent(ForgetPasswordActivity.this, LoginActivity.class));
                         finish();
                     }
