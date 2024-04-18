@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/statusBarColor"
-    tools:context=".ui.gallery.ProfileFragment">
+    tools:context=".ui.profile.ProfileFragment">
 
     <FrameLayout
         android:id="@+id/frameLayout"
@@ -46,6 +46,7 @@
                 android:gravity="center_vertical"
                 android:hint="Employee Name"
                 android:padding="8dp"
+                android:textAllCaps="true"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -100,7 +101,7 @@
                 android:id="@+id/contactNo"
                 android:layout_width="match_parent"
                 android:layout_height="48sp"
-                android:hint="employee_email@xyz.com"
+                android:hint="+91 1234567890"
                 android:textSize="18sp"
                 android:padding="8dp"
                 android:gravity="center_vertical"
@@ -109,6 +110,20 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/userEmail" />
+
+            <TextView
+                android:id="@+id/dateOfJoining"
+                android:layout_width="match_parent"
+                android:layout_height="48sp"
+                android:drawableStart="@drawable/date"
+                android:drawablePadding="8dp"
+                android:gravity="center_vertical"
+                android:hint="DD/MMM/YYYY"
+                android:padding="8dp"
+                android:textSize="18sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/contactNo" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

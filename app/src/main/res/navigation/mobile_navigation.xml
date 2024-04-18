@@ -13,7 +13,7 @@
 
     <fragment
         android:id="@+id/nav_profile"
-        android:name="com.android.brancoattendence.ui.gallery.ProfileFragment"
+        android:name="com.android.brancoattendence.ui.profile.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_profile" />
 
