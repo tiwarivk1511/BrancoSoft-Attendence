@@ -25,7 +25,6 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -41,37 +40,43 @@ public class LocationWorker extends Worker {
     @Override
     @NonNull
     public Result doWork() {
-        // Check if it's Saturday or Sunday, if yes, return without doing anything
-        Calendar cal = Calendar.getInstance();
-        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
-            return Result.success();
-        }
+        // Check if the user is logged in
+        if (isUserLoggedIn()) {
+            // Permission check
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_NOTIFICATION_POLICY) != PackageManager.PERMISSION_GRANTED) {
+                return Result.failure();
+            }
 
-        // Permission check
-        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_NOTIFICATION_POLICY) != PackageManager.PERMISSION_GRANTED) {
+            // Get the fused location provider client
+            FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
+
+            // Get the last known location
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(location -> {
+                        if (location != null) {
+                            double latitude = location.getLatitude();
+                            double longitude = location.getLongitude();
+
+                            boolean isWithinRange = isWithinCoordinatesRange(latitude, longitude);
+                            markAttendance(isWithinRange);
+                        }
+                    })
+                    .addOnFailureListener(Throwable::printStackTrace);
+
+            return Result.success();
+        } else {
+            // User is not logged in, do nothing
             return Result.failure();
         }
+    }
 
-        // Get the fused location provider client
-        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
-
-        // Get the last known location
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
-                    if (location != null) {
-                        double latitude = location.getLatitude();
-                        double longitude = location.getLongitude();
-
-                        boolean isWithinRange = isWithinCoordinatesRange(latitude, longitude);
-                        markAttendance(isWithinRange);
-                    }
-                })
-                .addOnFailureListener(Throwable::printStackTrace);
-
-        return Result.success();
+    private boolean isUserLoggedIn() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        // Check if the token is available in SharedPreferences or any other way you handle login status
+        String token = preferences.getString("token", null);
+        return token != null;
     }
 
     // Method to mark attendance
@@ -92,7 +97,6 @@ public class LocationWorker extends Worker {
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         if (ActivityCompat.checkSelfPermission(this.getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-
             return;
         }
         notificationManager.notify(1, builder.build());
@@ -151,46 +155,17 @@ public class LocationWorker extends Worker {
         }
     }
 
-    // Schedule the worker to run every day at 8:10 AM
-    // Schedule the worker to run every day at 8:10 AM and deactivate after 8:00 PM
+    // Method to schedule the worker to run every 15 minutes
     public static void scheduleLocationWorker(Context context) {
-        // Create a Calendar instance
-        Calendar cal = Calendar.getInstance();
+        PeriodicWorkRequest.Builder locationWorkerRequestBuilder =
+                new PeriodicWorkRequest.Builder(LocationWorker.class, 15, TimeUnit.MINUTES);
 
-        // Check if today is Saturday or Sunday, if yes, cancel any existing work and return
-        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-        if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
-            WorkManager.getInstance(context).cancelAllWork();
-            return;
-        }
-
-        // Set the time to turn on the worker (8:10 AM)
-        cal.set(Calendar.HOUR_OF_DAY, 8);
-        cal.set(Calendar.MINUTE, 10);
-        cal.set(Calendar.SECOND, 0);
-        long startTime = cal.getTimeInMillis();
-
-        // Set the time to turn off the worker (8:00 PM)
-        cal.set(Calendar.HOUR_OF_DAY, 20);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        long stopTime = cal.getTimeInMillis();
-
-        // Check if current time is between stop and start time
-        long currentTime = System.currentTimeMillis();
-        boolean shouldRunNow = currentTime >= startTime && currentTime <= stopTime;
-
-        // If current time is between stop and start time, schedule the worker to run every day
-        if (shouldRunNow) {
-            PeriodicWorkRequest.Builder locationWorkerRequestBuilder =
-                    new PeriodicWorkRequest.Builder(LocationWorker.class, PeriodicWorkRequest.MIN_PERIODIC_INTERVAL_MILLIS, TimeUnit.MILLISECONDS);
-
-            // Schedule the worker
-            WorkManager.getInstance(context).enqueue(locationWorkerRequestBuilder.build());
-        } else {
-            // Deactivate the worker if current time is outside the specified range
-            WorkManager.getInstance(context).cancelAllWork();
-        }
+        // Schedule the worker
+        WorkManager.getInstance(context).enqueue(locationWorkerRequestBuilder.build());
     }
 
+    // Method to cancel the scheduled worker
+    public static void cancelLocationWorker(Context context) {
+        WorkManager.getInstance(context).cancelAllWork();
+    }
 }

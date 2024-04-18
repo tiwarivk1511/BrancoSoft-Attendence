@@ -11,21 +11,16 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.android.brancoattendence.ApiService;
+import com.android.brancoattendence.ForgetPasswordResponse;
 import com.android.brancoattendence.LoginActivity;
 import com.android.brancoattendence.databinding.ActivityForgetPasswordBinding;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ForgetPasswordActivity extends AppCompatActivity {
     ActivityForgetPasswordBinding binding;
@@ -33,15 +28,18 @@ public class ForgetPasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         binding = ActivityForgetPasswordBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+
+        // Set padding for system bars
+        ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        // Enable edge-to-edge display
+        EdgeToEdge.enable(this);
         //lock the orientation of the screen
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -53,12 +51,8 @@ public class ForgetPasswordActivity extends AppCompatActivity {
         binding.SendOtpBtn.setOnClickListener(v -> {
             String email = binding.emailInput.getText().toString();
 
-            //click just one time
-            binding.SendOtpBtn.setEnabled(false);
-
             if (!email.isEmpty()) {
-                requestPasswordReset(email)
-                ;
+                requestPasswordReset(email);
             } else {
                 Toast.makeText(this, "Please enter your email", Toast.LENGTH_SHORT).show();
             }
@@ -67,51 +61,34 @@ public class ForgetPasswordActivity extends AppCompatActivity {
     }
 
     private void requestPasswordReset(String email) {
-        OkHttpClient client = new OkHttpClient();
-
-        RequestBody formBody = new FormBody.Builder()
-                .add("email", email)
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://192.168.1.11:8000/api/")
+                .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        Request request = new Request.Builder()
-                .url("http://192.168.1.11:8000/api/forget-password")
-                .post(formBody)
-                .build();
+        ApiService apiService = retrofit.create(ApiService.class);
 
-        client.newCall(request).enqueue(new Callback() {
+        Call<ForgetPasswordResponse> call = apiService.forgetPassword(email);
+
+        call.enqueue(new Callback<ForgetPasswordResponse>() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(ForgetPasswordActivity.this, "Failed to reset password. Please try again.", Toast.LENGTH_SHORT).show());
+            public void onResponse(Call<ForgetPasswordResponse> call, Response<ForgetPasswordResponse> response) {
+                if (response.isSuccessful()) {
+                    ForgetPasswordResponse forgetPasswordResponse = response.body();
+                    if (forgetPasswordResponse != null && forgetPasswordResponse.isSuccess()) {
+                        Toast.makeText(ForgetPasswordActivity.this, "Password reset email sent successfully", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(ForgetPasswordActivity.this, LoginActivity.class));
+                        finish();
+                    }
+                } else {
+                    Toast.makeText(ForgetPasswordActivity.this, "Failed to reset password. Please try again.", Toast.LENGTH_SHORT).show();
+                }
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String responseBody = response.body().string();
-                    try {
-                        JSONObject json = new JSONObject(responseBody);
-                        boolean success = json.getBoolean("success");
-                        if (success) {
-                            runOnUiThread(() -> {
-                                Toast.makeText(ForgetPasswordActivity.this, "Password reset email sent successfully", Toast.LENGTH_SHORT).show();
-                            });
-
-                            Intent intent = new Intent(ForgetPasswordActivity.this, LoginActivity.class);
-                            startActivity(intent);
-                            finish();
-
-                        } else {
-                            String message = json.getString("message");
-                            runOnUiThread(() -> Toast.makeText(ForgetPasswordActivity.this, message, Toast.LENGTH_SHORT).show());
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        runOnUiThread(() -> Toast.makeText(ForgetPasswordActivity.this, "Failed to reset password. Please try again.", Toast.LENGTH_SHORT).show());
-                    }
-                } else {
-                    runOnUiThread(() -> Toast.makeText(ForgetPasswordActivity.this, "Failed to reset password. Please try again.", Toast.LENGTH_SHORT).show());
-                }
+            public void onFailure(Call<ForgetPasswordResponse> call, Throwable t) {
+                t.printStackTrace();
+                Toast.makeText(ForgetPasswordActivity.this, "Failed to reset password. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
     }

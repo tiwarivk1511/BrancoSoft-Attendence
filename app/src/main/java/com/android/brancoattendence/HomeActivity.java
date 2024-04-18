@@ -48,6 +48,9 @@ public class HomeActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
 
+        MyBroadcastReceiver myBroadcastReceiver = new MyBroadcastReceiver();
+        myBroadcastReceiver.onReceive(this, new Intent(Intent.ACTION_BOOT_COMPLETED));
+
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             if (destination.getId() == R.id.nav_profile || destination.getId() == R.id.nav_attendance) {
                 binding.appBarHome.toolbar.setNavigationIcon(R.drawable.round_arrow_back_ios_24);

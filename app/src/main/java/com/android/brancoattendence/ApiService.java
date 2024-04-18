@@ -22,6 +22,10 @@ public interface ApiService {
     @GET("user")
     Call<UserDataResponse> getUserData(@Header("Authorization") String token);
 
+    @FormUrlEncoded
+    @POST("forget-password")
+    Call<ForgetPasswordResponse> forgetPassword(@Field("email") String email);
+
     @POST("logout")
     Call<Void> logout(@Header("Authorization") String token);
 }

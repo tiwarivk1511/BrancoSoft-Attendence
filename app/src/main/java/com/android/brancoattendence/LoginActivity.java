@@ -64,7 +64,6 @@ public class LoginActivity extends ComponentActivity {
         binding.loginBtn.setOnClickListener(v -> {
             String email = binding.emailInput.getText().toString().trim();
             String password = binding.passwordInput.getText().toString().trim();
-
             // Reset error messages
             binding.errorEmailTxt.setVisibility(View.GONE);
             binding.errorPasswordTxt.setVisibility(View.GONE);
@@ -102,8 +101,12 @@ public class LoginActivity extends ComponentActivity {
     }
 
     private boolean isValidEmail(String email) {
-        return email.matches("[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+");
+        // Regular expression for validating email addresses
+        String regex = "^(?=.{1,256}$)[a-zA-Z0-9_-]+(?:\\.[a-zA-Z0-9_-]+)*@" +
+                "[a-zA-Z0-9_-]+(?:\\.[a-zA-Z0-9_-]+)+$";
+        return email.matches(regex);
     }
+
 
     private void requestPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -115,6 +118,7 @@ public class LoginActivity extends ComponentActivity {
     }
 
     private void login(String email, String password) {
+        binding.progressCircular.setVisibility(View.VISIBLE);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -123,6 +127,7 @@ public class LoginActivity extends ComponentActivity {
         ApiService apiService = retrofit.create(ApiService.class);
         Call<LoginResponse> call = apiService.login(email, password);
         call.enqueue(new Callback<LoginResponse>() {
+
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful()) {
@@ -133,6 +138,7 @@ public class LoginActivity extends ComponentActivity {
                     SharedPreferences.Editor editor = preferences.edit();
                     editor.putString("token", token);
                     editor.apply();
+                    binding.progressCircular.setVisibility(View.GONE);
                     Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
                     startActivity(intent);
                     finish();
@@ -140,32 +146,37 @@ public class LoginActivity extends ComponentActivity {
                     // Handle error response
                     int statusCode = response.code();
                     Log.e("LoginActivity", "Login failed with status code: " + statusCode);
-                    try {
-                        Log.e("LoginActivity", "Error response body: " + response.errorBody().string());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    // You can handle different status codes here
                     switch (statusCode) {
                         case 400:
+                            // Bad request: Invalid email or password
                             Toast.makeText(getApplicationContext(), "Invalid email or password", Toast.LENGTH_SHORT).show();
+                            binding.errorEmailTxt.setVisibility(View.VISIBLE);
+                            binding.errorEmailTxt.setText(response.message());
                             break;
                         case 401:
-                            Toast.makeText(getApplicationContext(), "Unauthorized", Toast.LENGTH_SHORT).show();
+                            // Unauthorized: Incorrect password
+                            Toast.makeText(getApplicationContext(), "Incorrect password", Toast.LENGTH_SHORT).show();
+                            binding.errorPasswordTxt.setVisibility(View.VISIBLE);
+                            binding.errorPasswordTxt.setText(response.message());
                             break;
                         case 404:
-                            Toast.makeText(getApplicationContext(), "User not found", Toast.LENGTH_SHORT).show();
+                            // Not found: Email not registered
+                            Toast.makeText(getApplicationContext(), "Email not registered", Toast.LENGTH_SHORT).show();
+                            binding.errorEmailTxt.setVisibility(View.VISIBLE);
+                            binding.errorEmailTxt.setText(response.message());
                             break;
                         case 500:
+                            // Internal server error
                             Toast.makeText(getApplicationContext(), "Internal server error", Toast.LENGTH_SHORT).show();
                             break;
                         default:
+                            // Other error
                             Toast.makeText(getApplicationContext(), "An error occurred", Toast.LENGTH_SHORT).show();
                             break;
                     }
                 }
             }
+
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
