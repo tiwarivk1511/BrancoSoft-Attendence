@@ -17,13 +17,12 @@
         android:roundIcon="@drawable/brancosoft_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.BrancoAttendence"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
             android:name=".ProfileActivity"
             android:exported="false" />
-        <activity
-            android:name=".AttendanceRecord"
-            android:exported="false" />
+
         <activity
             android:name=".HomeActivity"
             android:exported="false"

@@ -152,6 +152,7 @@ public class LocationWorker extends Worker {
     }
 
     // Schedule the worker to run every day at 8:10 AM
+    // Schedule the worker to run every day at 8:10 AM and deactivate after 8:00 PM
     public static void scheduleLocationWorker(Context context) {
         // Create a Calendar instance
         Calendar cal = Calendar.getInstance();
@@ -170,8 +171,8 @@ public class LocationWorker extends Worker {
         long startTime = cal.getTimeInMillis();
 
         // Set the time to turn off the worker (8:00 PM)
-        cal.set(Calendar.HOUR_OF_DAY, 19);
-        cal.set(Calendar.MINUTE, 30);
+        cal.set(Calendar.HOUR_OF_DAY, 20);
+        cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         long stopTime = cal.getTimeInMillis();
 
@@ -186,7 +187,10 @@ public class LocationWorker extends Worker {
 
             // Schedule the worker
             WorkManager.getInstance(context).enqueue(locationWorkerRequestBuilder.build());
+        } else {
+            // Deactivate the worker if current time is outside the specified range
+            WorkManager.getInstance(context).cancelAllWork();
         }
-
     }
+
 }

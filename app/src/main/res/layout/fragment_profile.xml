@@ -23,12 +23,12 @@
             android:layout_marginTop="80dp">
 
             <TextView
-                android:id="@+id/userName"
+                android:id="@+id/employeeId"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Employee Name"
+                android:hint="Employee Id"
                 android:padding="8dp"
-                android:drawableStart="@drawable/person_filled"
+                android:drawableStart="@drawable/employee_id"
                 android:drawablePadding="8dp"
                 android:gravity="center_vertical"
                 android:textSize="20sp"
@@ -36,6 +36,21 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/userName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawableStart="@drawable/person_filled"
+                android:drawablePadding="8dp"
+                android:gravity="center_vertical"
+                android:hint="Employee Name"
+                android:padding="8dp"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/employeeId" />
 
             <TextView
                 android:id="@+id/designation"
