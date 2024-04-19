@@ -160,7 +160,6 @@
         android:id="@+id/progress_circular"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_marginBottom="40dp"
         android:indeterminateTint="@color/statusBarColor"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"

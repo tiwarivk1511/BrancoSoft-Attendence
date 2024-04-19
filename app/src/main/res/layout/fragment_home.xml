@@ -99,7 +99,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="3dp"
-                        android:src="@drawable/login" />
+                        android:src="@drawable/login"
+                        app:tint="@null" />
                 </androidx.cardview.widget.CardView>
 
                 <TextView
@@ -163,6 +164,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:padding="5dp"
+                        app:tint="@null"
                         android:src="@drawable/logout" />
 
                 </androidx.cardview.widget.CardView>

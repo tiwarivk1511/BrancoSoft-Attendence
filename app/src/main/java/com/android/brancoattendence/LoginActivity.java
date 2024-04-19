@@ -33,7 +33,7 @@ public class LoginActivity extends ComponentActivity {
 
     private static final int REQUEST_LOCATION_PERMISSION = 101 ;
     private ActivityLoginBinding binding;
-    private static final String BASE_URL = "http://192.168.1.11:8000/api/";
+    private static final String BASE_URL = HostURL.getBaseUrl();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +47,7 @@ public class LoginActivity extends ComponentActivity {
         });
 
         //change the color of status bar without and SDK version check
-        if (Build.VERSION.SDK_INT >= 21) {
-            getWindow().setStatusBarColor(Color.TRANSPARENT);
-        }
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
         //check if user is already logged in
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String token = preferences.getString("token", null);
@@ -168,10 +166,12 @@ public class LoginActivity extends ComponentActivity {
                         case 500:
                             // Internal server error
                             Toast.makeText(getApplicationContext(), "Internal server error", Toast.LENGTH_SHORT).show();
+                            binding.progressCircular.setVisibility(View.GONE);
                             break;
                         default:
                             // Other error
                             Toast.makeText(getApplicationContext(), "An error occurred", Toast.LENGTH_SHORT).show();
+                            binding.progressCircular.setVisibility(View.GONE);
                             break;
                     }
                 }
