@@ -77,7 +77,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void performLogOut() {
-        String baseUrl = "http://192.168.1.11:8000/api/";
+        String baseUrl = HostURL.getBaseUrl();
         String logoutEndpoint = "logout";
         String token = retrieveTokenFromSharedPreferences();
 

@@ -63,9 +63,9 @@ public class ForgetPasswordActivity extends AppCompatActivity {
 
     private void requestPasswordReset(String email) {
         binding.progressCircular.setVisibility(View.VISIBLE);
-
+        String baseUrl = HostURL.getBaseUrl();
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.11:8000/api/")
+                .baseUrl(baseUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 

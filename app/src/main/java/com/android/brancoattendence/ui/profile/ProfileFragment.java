@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.android.brancoattendence.ApiService;
+import com.android.brancoattendence.HostURL;
 import com.android.brancoattendence.databinding.FragmentProfileBinding;
 
 import retrofit2.Call;
@@ -23,7 +24,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
-    private static final String BASE_URL = "http://192.168.1.11:8000/api/";
+    private static final String BASE_URL = HostURL.getBaseUrl();
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
