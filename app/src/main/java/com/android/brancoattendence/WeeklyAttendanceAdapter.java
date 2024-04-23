@@ -64,7 +64,7 @@ public class WeeklyAttendanceAdapter extends RecyclerView.Adapter<WeeklyAttendan
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            dateTextView = itemView.findViewById(R.id.textView6);
+            dateTextView = itemView.findViewById(R.id.date);
             checkInTimeTextView = itemView.findViewById(R.id.checkInTime);
             checkOutTimeTextView = itemView.findViewById(R.id.checkOutTime);
         }

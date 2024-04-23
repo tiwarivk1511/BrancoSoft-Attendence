@@ -1,5 +1,7 @@
 package com.android.brancoattendence;
 
+import static com.android.brancoattendence.Attendence.CheckInResponse.getCheckInTime;
+
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -11,6 +13,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -21,6 +24,7 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.android.brancoattendence.Attendence.CheckInResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
@@ -28,6 +32,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class LocationWorker extends Worker {
 
@@ -83,6 +92,40 @@ public class LocationWorker extends Worker {
     private void markAttendance(boolean isPresent) {
         String message = isPresent ? "Attendance marked!" : "User marked out!";
         showAttendanceNotification(message);
+
+    }
+
+    void MarkCheckIn() {
+        String baseUrl = HostURL.getBaseUrl();
+        String token = retrieveTokenFromSharedPreferences();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .build();
+        ApiService apiService = retrofit.create(ApiService.class);
+
+        Call<CheckInResponse> call = apiService.checkIn("Bearer " + token, getCheckInTime());
+
+        call.enqueue(new Callback<CheckInResponse>() {
+
+            @Override
+            public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
+
+                if (response.isSuccessful()) {
+                    Toast.makeText(getApplicationContext(), "CheckIn Successful", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CheckInResponse> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), "CheckIn Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private String retrieveTokenFromSharedPreferences() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        return preferences.getString("token", null);
     }
 
     // Method to show attendance notification

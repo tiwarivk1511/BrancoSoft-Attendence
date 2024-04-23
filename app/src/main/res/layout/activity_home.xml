@@ -20,6 +20,12 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
+        app:itemVerticalPadding="15dp"
+        app:itemHorizontalPadding="20dp"
+        android:textAlignment="center"
+        android:isScrollContainer="true"
+        app:layout_constraintEnd_toEndOf="parent"
         app:headerLayout="@layout/nav_header_home"
-        app:menu="@menu/activity_main_drawer" />
+        app:menu="@menu/activity_main_drawer"
+        tools:ignore="RtlCompat" />
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -108,6 +108,8 @@ public class ProfileFragment extends Fragment {
 
     private String retrieveTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        return preferences.getString("token", null);
+        String token = preferences.getString("token", null);
+        System.out.println("Token: " + token);
+        return token;
     }
 }

@@ -1,5 +1,7 @@
 package com.android.brancoattendence;
 
+import static com.android.brancoattendence.Attendence.CheckInResponse.getCheckInTime;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -16,6 +18,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import com.android.brancoattendence.Attendence.CheckInResponse;
 import com.android.brancoattendence.databinding.ActivityHomeBinding;
 
 import java.util.Objects;
@@ -76,9 +79,10 @@ public class HomeActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
     }
 
+
+
     private void performLogOut() {
         String baseUrl = HostURL.getBaseUrl();
-        String logoutEndpoint = "logout";
         String token = retrieveTokenFromSharedPreferences();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -99,6 +103,7 @@ public class HomeActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(HomeActivity.this, "Logout failed", Toast.LENGTH_SHORT).show();
                 }
+
             }
 
             @Override

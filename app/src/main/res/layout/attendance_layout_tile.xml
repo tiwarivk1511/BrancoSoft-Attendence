@@ -16,12 +16,12 @@
         android:layout_marginStart="20dp">
 
         <TextView
-            android:id="@+id/textView6"
+            android:id="@+id/date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
-            android:hint="April 21, 2024"
+            android:hint="YYYY- MM- DD"
             android:textColor="@color/black"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -39,8 +39,8 @@
             android:backgroundTint="#D8D6D6"
             app:cardCornerRadius="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="@+id/textView6"
-            app:layout_constraintTop_toBottomOf="@+id/textView6">
+            app:layout_constraintStart_toStartOf="@+id/date"
+            app:layout_constraintTop_toBottomOf="@+id/date">
 
             <ImageView
                 android:layout_width="match_parent"
@@ -53,8 +53,8 @@
             android:id="@+id/checkInTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="09:30 AM"
-            android:textSize="18sp"
+            android:hint="HH:mm:ss AM"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/black"
             android:layout_marginStart="10dp"
@@ -71,7 +71,7 @@
             android:rotationX="10"
             android:rotationY="15"
             app:cardCornerRadius="20dp"
-            android:layout_marginStart="80dp"
+            android:layout_marginStart="50dp"
             app:layout_constraintBottom_toBottomOf="@+id/checkInTime"
             app:layout_constraintStart_toEndOf="@+id/checkInTime"
             app:layout_constraintTop_toTopOf="@+id/checkInTime">
@@ -88,9 +88,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:hint="06:30 PM"
+            android:hint="HH:mm:ss PM"
             android:textColor="@color/black"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@+id/checkOutImgCard"
             app:layout_constraintStart_toEndOf="@+id/checkOutImgCard"

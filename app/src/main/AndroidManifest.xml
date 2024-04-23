@@ -24,6 +24,7 @@
         <activity
             android:name=".HomeActivity"
             android:exported="false"
+            android:windowSoftInputMode="adjustResize"
             android:label="@string/title_activity_home"
             android:theme="@style/Theme.BrancoAttendence.NoActionBar" />
         <activity
