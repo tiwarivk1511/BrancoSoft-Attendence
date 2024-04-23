@@ -93,6 +93,7 @@ public class ForgetPasswordActivity extends AppCompatActivity {
             public void onFailure(Call<ForgetPasswordResponse> call, Throwable t) {
                 t.printStackTrace();
                 Toast.makeText(ForgetPasswordActivity.this, "Failed to reset password. Please try again.", Toast.LENGTH_SHORT).show();
+                binding.progressCircular.setVisibility(View.GONE);
             }
         });
     }

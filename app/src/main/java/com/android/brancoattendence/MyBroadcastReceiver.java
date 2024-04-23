@@ -51,7 +51,6 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         return dayOfWeek >= Calendar.MONDAY && dayOfWeek <= Calendar.FRIDAY;
     }
 
-
     private boolean isWithinTimeInterval() {
         Calendar cal = Calendar.getInstance();
         int hourOfDay = cal.get(Calendar.HOUR_OF_DAY);

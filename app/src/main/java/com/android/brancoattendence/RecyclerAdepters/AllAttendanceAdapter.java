@@ -17,50 +17,13 @@ import java.util.List;
 
 public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdapter.ViewHolder> {
 
-    private List<AttendanceData> attendanceList = new ArrayList<>();
-    private Context contex;
+    private List<AttendanceData> attendanceList;
+    private Context context;
 
-    public AllAttendanceAdapter(Context context, ArrayList<AttendanceData> attendanceList) {
-        this.contex = context; // Assign context parameter to the context variable
+    public AllAttendanceAdapter(Context context, List<AttendanceData> attendanceList) {
+        this.context = context;
         this.attendanceList = attendanceList;
-
     }
-
-
-//    public void fetchAllAttendance() {
-//        String token = getUserToken();
-//
-//        Retrofit retrofit = new Retrofit.Builder()
-//                .baseUrl(HostURL.getBaseUrl())
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build();
-//
-//        ApiService apiService = retrofit.create(ApiService.class);
-//
-//        apiService.getAttendances("Bearer " + token).enqueue(new Callback<List<AttendanceData>>() {
-//            @Override
-//            public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
-//                if (response.isSuccessful()) {
-//                    attendanceList.clear(); // Clear existing data
-//                    attendanceList.addAll(response.body()); // Add new data
-//                } else {
-//                    // Handle unsuccessful response
-//                    Toast.makeText(contex.getApplicationContext(), "Something went wrong, Please try again later.", Toast.LENGTH_SHORT).show();
-//                }
-//            }
-//
-//            @Override
-//            public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
-//                // Handle failure
-//                Toast.makeText(contex.getApplicationContext(), "Error: " +t.getMessage(), Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//    }
-//
-//    private String getUserToken() {
-//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(contex.getApplicationContext());
-//        return sharedPreferences.getString(TOKEN_KEY, "");
-//    }
 
     @NonNull
     @Override
@@ -73,28 +36,27 @@ public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdap
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AttendanceData attendanceData = attendanceList.get(position);
         if (attendanceData != null) {
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a");
 
-            //formate DD/MM/YYYY fromate of date
-            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
-            String fromattedDate = inputFormat.format(attendanceData.getDate());
+            String formattedDate = dateFormat.format(attendanceData.getDate());
+            String formattedCheckInTime = timeFormat.format(attendanceData.getCheckInTime());
+            String formattedCheckOutTime = timeFormat.format(attendanceData.getCheckOutTime());
 
-            SimpleDateFormat inTime = new SimpleDateFormat("HH:mm:ss a");
-            String fromattedInTime = inTime.format(attendanceData.getCheckInTime());
-
-            SimpleDateFormat outTime = new SimpleDateFormat("HH:mm:ss a");
-            String fromattedOutTime = outTime.format(attendanceData.getCheckOutTime());
-
-            holder.date.setText(fromattedDate);
-            holder.checkinTime.setText(fromattedInTime);
-            holder.checkOutTime.setText(fromattedOutTime);
+            holder.date.setText(formattedDate);
+            holder.checkinTime.setText(formattedCheckInTime);
+            holder.checkOutTime.setText(formattedCheckOutTime);
         }
-
     }
-
 
     @Override
     public int getItemCount() {
         return attendanceList.size();
+    }
+
+    public void setData(List<AttendanceData> filteredList) {
+        this.attendanceList = filteredList;
+        notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -108,7 +70,6 @@ public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdap
             date = itemView.findViewById(R.id.date);
             checkinTime = itemView.findViewById(R.id.checkInTime);
             checkOutTime = itemView.findViewById(R.id.checkOutTime);
-
         }
     }
 }

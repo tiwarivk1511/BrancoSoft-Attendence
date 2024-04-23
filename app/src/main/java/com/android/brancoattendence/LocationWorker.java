@@ -6,12 +6,8 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -23,12 +19,10 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import com.android.brancoattendence.Attendence.CheckInResponse;
+import com.android.brancoattendence.Attendence.CheckOutResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
@@ -40,6 +34,7 @@ public class LocationWorker extends Worker {
 
     private static final String ATTENDANCE_CHANNEL_ID = "attendance_channel";
 
+    private String attendanceID;
     public LocationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
     }
@@ -87,9 +82,11 @@ public class LocationWorker extends Worker {
 
     // Method to mark attendance
     private void markAttendance(boolean isPresent) {
-        String message = isPresent ? "Attendance marked!" : "User marked out!";
-        showAttendanceNotification(message);
-        markCheckIn();
+        if (isPresent) {
+            markCheckIn();
+        } else {
+            markCheckOut();
+        }
     }
 
     private void markCheckIn() {
@@ -107,14 +104,50 @@ public class LocationWorker extends Worker {
             @Override
             public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(getApplicationContext(), "CheckIn Successful", Toast.LENGTH_SHORT).show();
-                    System.out.println("CheckIn Response: " + response.body());
+                    CheckInResponse.setCheckInTime(response.body().getCheckInTime());
+                     attendanceID = String.valueOf(response.body().getAttendanceId());
+                    showAttendanceNotification("Attendance marked!");
+                } else {
+                    showAttendanceNotification("Failed to mark attendance!");
                 }
             }
 
             @Override
             public void onFailure(Call<CheckInResponse> call, Throwable t) {
-                Toast.makeText(getApplicationContext(), "CheckIn Failed", Toast.LENGTH_SHORT).show();
+                showAttendanceNotification("Failed to mark attendance!");
+            }
+        });
+    }
+
+    private void markCheckOut() {
+        // Implement marking checkout if needed
+        String attendanceId = String.valueOf(CheckInResponse.getAttendanceId());
+        String baseUrl = HostURL.getBaseUrl();
+        String token = retrieveTokenFromSharedPreferences();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .build();
+        ApiService apiService = retrofit.create(ApiService.class);
+
+        Call<CheckOutResponse> call = apiService.checkOut("Bearer " + token,attendanceId,CheckOutResponse.getCheckOutTime());
+        call.enqueue(new Callback<CheckOutResponse>() {
+
+            @Override
+            public void onResponse(Call<CheckOutResponse> call, Response<CheckOutResponse> response) {
+
+                if (response.isSuccessful()) {
+                    CheckOutResponse.setCheckOutTime(response.body().getCheckOutTime());
+                    showAttendanceNotification("Checkout marked!");
+                }
+                else {
+                    showAttendanceNotification("Failed to mark checkout!");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CheckOutResponse> call, Throwable t) {
+                showAttendanceNotification("Failed to mark checkout!");
             }
         });
     }
@@ -136,13 +169,6 @@ public class LocationWorker extends Worker {
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         notificationManager.notify(1, builder.build());
@@ -150,9 +176,31 @@ public class LocationWorker extends Worker {
 
     // Method to check if the user is within the specified coordinates range
     private boolean isWithinCoordinatesRange(double latitude, double longitude) {
-        // Implement your logic to check if the user is within the specified coordinates range
-        return true; // Replace with your actual implementation
+        // Coordinates of the designated location (e.g., office)
+        double officeLatitude = 28.6188512; // Example latitude of office
+        double officeLongitude = 77.3911159; // Example longitude of office
+
+        // Radius of the Earth in kilometers
+        double earthRadius = 6371;
+
+        // Calculate the differences in latitude and longitude
+        double latDistance = Math.toRadians(officeLatitude - latitude);
+        double lonDistance = Math.toRadians(officeLongitude - longitude);
+
+        // Calculate the Haversine formula
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(officeLatitude))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        // Calculate the distance in kilometers
+        double distance = earthRadius * c;
+
+        // Check if the distance is within the specified range (e.g., 500 meters)
+        return distance <= 0.5; // Specify the range in kilometers
     }
+
 
     // Method to create notification channel
     private void createNotificationChannel() {

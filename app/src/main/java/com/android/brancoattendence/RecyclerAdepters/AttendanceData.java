@@ -1,15 +1,27 @@
 package com.android.brancoattendence.RecyclerAdepters;
 
 public class AttendanceData {
-
     private String date;
     private String checkInTime;
     private String checkOutTime;
+    private static int EmpId;
 
+    // Constructor
     public AttendanceData(String date, String checkInTime, String checkOutTime) {
         this.date = date;
         this.checkInTime = checkInTime;
         this.checkOutTime = checkOutTime;
+    }
+
+
+
+    // Getter and setter methods
+    public static int getEmpId() {
+        return EmpId;
+    }
+
+    public void setEmpId(String empId) {
+        EmpId = Integer.parseInt(empId);
     }
 
     public String getDate() {
@@ -20,6 +32,7 @@ public class AttendanceData {
         this.date = date;
     }
 
+    // Getter and setter methods for check-in time
     public String getCheckInTime() {
         return checkInTime;
     }
@@ -28,6 +41,7 @@ public class AttendanceData {
         this.checkInTime = checkInTime;
     }
 
+    // Getter and setter methods for check-out time
     public String getCheckOutTime() {
         return checkOutTime;
     }
@@ -36,9 +50,5 @@ public class AttendanceData {
         this.checkOutTime = checkOutTime;
     }
 
-    public void add(AttendanceData attendanceData) {
-        this.date = attendanceData.date;
-        this.checkInTime = attendanceData.checkInTime;
-        this.checkOutTime = attendanceData.checkOutTime;
-    }
+
 }

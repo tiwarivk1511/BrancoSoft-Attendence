@@ -6,7 +6,7 @@ public class CheckOutResponse {
 
     public String message;
     public String Token;
-    public String CheckOutTime;
+    public static String CheckOutTime;
     public int attendanceId;
 
     public String getMessage() {
@@ -25,11 +25,11 @@ public class CheckOutResponse {
         Token = token;
     }
 
-    public String getCheckOutTime() {
+    public static String getCheckOutTime() {
         return CheckOutTime;
     }
 
-    public void setCheckOutTime(String checkOutTime) {
+    public static void setCheckOutTime(String checkOutTime) {
         CheckOutTime = checkOutTime;
     }
 

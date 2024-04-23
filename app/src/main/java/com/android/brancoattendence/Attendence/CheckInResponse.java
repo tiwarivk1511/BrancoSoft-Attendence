@@ -6,10 +6,10 @@ import java.util.Date;
 
 public class CheckInResponse {
     @SerializedName("attd_id")
-    private int attendanceId;
+    private static int attendanceId;
     private static String checkInTime;
 
-    public int getAttendanceId() {
+    public static int getAttendanceId() {
         return attendanceId;
     }
 

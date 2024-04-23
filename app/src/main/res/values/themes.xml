@@ -15,4 +15,15 @@
     <style name="Theme.BrancoAttendence.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.BrancoAttendence.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="DatePickerDialogTheme" parent="ThemeOverlay.MaterialComponents.Dialog">
+        <!-- Customize the color of the date picker header background -->
+        <item name="colorPrimary">@color/statusBarColor</item>
+        <!-- Customize the color of the date picker header text -->
+        <item name="android:textColorPrimary">#0404F4</item>
+        <!-- Customize the color of the date picker selection -->
+        <item name="colorAccent">@color/black</item>
+        <!-- Customize the color of the date picker date text -->
+        <item name="android:textColorPrimaryInverse">@color/white</item>
+    </style>
 </resources>

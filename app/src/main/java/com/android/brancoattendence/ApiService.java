@@ -21,6 +21,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.PUT;
+import retrofit2.http.Query;
 
 public interface ApiService {
 
@@ -67,7 +68,7 @@ public interface ApiService {
 
 
     @POST("forget-password")
-    Call<ForgetPasswordResponse> forgetPassword(@Field("email") String email);
+    Call<ForgetPasswordResponse> forgetPassword(@Query("email") String email);
 
 
     @POST("logout")

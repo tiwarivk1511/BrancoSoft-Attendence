@@ -107,6 +107,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
                     Navigation.findNavController(requireView()).navigate(R.id.nav_attendance);
                 }
         );
+        highlightTodayAndScroll(binding.ViewDates,dates);
 
         return root;
     }
@@ -171,8 +172,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
         String FullName = userData.getFirstName() +MiddName+ " " + userData.getLastName();
         // Update UI with user data
-        binding.greeting.setText("Welcome \uD83D\uDC4B!" +
-                "\n"+ FullName);
+        binding.greeting.setText("Welcome \uD83D\uDC4B!" +"\n"+ FullName);
     }
     private List<DayOfWeek> getDaysOfWeekForDates(List<Date> dates) {
         List<DayOfWeek> dayOfWeeks = new ArrayList<>();
@@ -190,14 +190,24 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         int todayPosition = getTodayPosition(dates);
         if (todayPosition != -1) {
             recyclerView.scrollToPosition(todayPosition);
-            recyclerView.smoothScrollToPosition(todayPosition);
+            recyclerView.post(() -> recyclerView.smoothScrollToPosition(todayPosition));
 
-            DateAdapter.ViewHolder todayViewHolder = (DateAdapter.ViewHolder) recyclerView.findViewHolderForAdapterPosition(todayPosition);
-            if (todayViewHolder != null) {
-                todayViewHolder.itemView.setBackgroundColor(R.color.bg_color); // Highlight color
-            }
+            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                @Override
+                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                    super.onScrollStateChanged(recyclerView, newState);
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        DateAdapter.ViewHolder todayViewHolder = (DateAdapter.ViewHolder) recyclerView.findViewHolderForAdapterPosition(todayPosition);
+                        if (todayViewHolder != null) {
+                            todayViewHolder.itemView.setBackgroundColor(requireContext().getColor(R.color.bg_color)); // Highlight color
+                        }
+                        recyclerView.removeOnScrollListener(this); // Remove the listener after highlighting the date
+                    }
+                }
+            });
         }
     }
+
 
     private int getTodayPosition(List<Date> dates) {
         Calendar calToday = Calendar.getInstance();
