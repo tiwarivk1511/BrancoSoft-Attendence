@@ -1,7 +1,5 @@
 package com.android.brancoattendence;
 
-import static com.android.brancoattendence.Attendence.CheckInResponse.getCheckInTime;
-
 import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -40,7 +38,7 @@ import retrofit2.Retrofit;
 
 public class LocationWorker extends Worker {
 
-    private static final String Attendance_CHANNEL_ID = "attendance_channel";
+    private static final String ATTENDANCE_CHANNEL_ID = "attendance_channel";
 
     public LocationWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
@@ -53,8 +51,7 @@ public class LocationWorker extends Worker {
         if (isUserLoggedIn()) {
             // Permission check
             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_NOTIFICATION_POLICY) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return Result.failure();
             }
 
@@ -92,10 +89,10 @@ public class LocationWorker extends Worker {
     private void markAttendance(boolean isPresent) {
         String message = isPresent ? "Attendance marked!" : "User marked out!";
         showAttendanceNotification(message);
-
+        markCheckIn();
     }
 
-    void MarkCheckIn() {
+    private void markCheckIn() {
         String baseUrl = HostURL.getBaseUrl();
         String token = retrieveTokenFromSharedPreferences();
 
@@ -104,15 +101,14 @@ public class LocationWorker extends Worker {
                 .build();
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<CheckInResponse> call = apiService.checkIn("Bearer " + token, getCheckInTime());
+        Call<CheckInResponse> call = apiService.checkIn("Bearer " + token, CheckInResponse.getCheckInTime());
 
         call.enqueue(new Callback<CheckInResponse>() {
-
             @Override
             public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
-
                 if (response.isSuccessful()) {
                     Toast.makeText(getApplicationContext(), "CheckIn Successful", Toast.LENGTH_SHORT).show();
+                    System.out.println("CheckIn Response: " + response.body());
                 }
             }
 
@@ -132,14 +128,21 @@ public class LocationWorker extends Worker {
     private void showAttendanceNotification(String message) {
         createNotificationChannel();
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), Attendance_CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), ATTENDANCE_CHANNEL_ID)
                 .setSmallIcon(R.drawable.brancosoft_logo)
                 .setContentTitle("Attendance")
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-        if (ActivityCompat.checkSelfPermission(this.getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
             return;
         }
         notificationManager.notify(1, builder.build());
@@ -147,42 +150,8 @@ public class LocationWorker extends Worker {
 
     // Method to check if the user is within the specified coordinates range
     private boolean isWithinCoordinatesRange(double latitude, double longitude) {
-        // Specify the coordinates of the office location
-        double officeLatitude = 28.6188512; // Example latitude of office
-        double officeLongitude = 77.3911159; // Example longitude of office
-        double maxDistance = 500; // Maximum distance in meters
-
-        // Calculate the distance between the current location and the office location
-        float[] results = new float[1];
-        Location.distanceBetween(latitude, longitude, officeLatitude, officeLongitude, results);
-        getAddress(latitude, longitude);
-
-        System.out.println("Distance to office: " + results[0] + " meters");
-        // Check if the distance is within the specified range
-        return results[0] <= maxDistance;
-    }
-
-    // Method to get address from coordinates
-    private String getAddress(double latitude, double longitude) {
-        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-        try {
-            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-            if (!addresses.isEmpty()) {
-                saveAddressToSharedPreferences(addresses.get(0).getAddressLine(0));
-                return addresses.get(0).getAddressLine(0);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    // Method to save address to SharedPreferences
-    private void saveAddressToSharedPreferences(String address) {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("address", address);
-        editor.apply();
+        // Implement your logic to check if the user is within the specified coordinates range
+        return true; // Replace with your actual implementation
     }
 
     // Method to create notification channel
@@ -191,7 +160,7 @@ public class LocationWorker extends Worker {
             CharSequence name = "Attendance Channel";
             String description = "Channel for showing attendance notifications";
             int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(Attendance_CHANNEL_ID, name, importance);
+            NotificationChannel channel = new NotificationChannel(ATTENDANCE_CHANNEL_ID, name, importance);
             channel.setDescription(description);
             NotificationManager notificationManager = getApplicationContext().getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);

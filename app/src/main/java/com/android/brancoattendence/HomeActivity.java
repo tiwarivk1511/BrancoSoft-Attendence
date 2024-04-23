@@ -1,7 +1,5 @@
 package com.android.brancoattendence;
 
-import static com.android.brancoattendence.Attendence.CheckInResponse.getCheckInTime;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -18,7 +16,6 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.android.brancoattendence.Attendence.CheckInResponse;
 import com.android.brancoattendence.databinding.ActivityHomeBinding;
 
 import java.util.Objects;
@@ -51,9 +48,6 @@ public class HomeActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
 
-        MyBroadcastReceiver myBroadcastReceiver = new MyBroadcastReceiver();
-        myBroadcastReceiver.onReceive(this, new Intent(Intent.ACTION_BOOT_COMPLETED));
-
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             if (destination.getId() == R.id.nav_profile || destination.getId() == R.id.nav_attendance) {
                 binding.appBarHome.toolbar.setNavigationIcon(R.drawable.round_arrow_back_ios_24);
@@ -78,8 +72,6 @@ public class HomeActivity extends AppCompatActivity {
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayShowTitleEnabled(false);
     }
-
-
 
     private void performLogOut() {
         String baseUrl = HostURL.getBaseUrl();

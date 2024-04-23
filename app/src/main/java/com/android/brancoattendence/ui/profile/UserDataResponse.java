@@ -11,10 +11,10 @@ public class UserDataResponse {
     private String firstName;
 
     @SerializedName("m_name")
-    private String middleName;
+    private  String middleName;
 
     @SerializedName("l_name")
-    private String lastName;
+    private  String lastName;
 
     private String email;
 
@@ -38,7 +38,7 @@ public class UserDataResponse {
         this.employeeId = employeeId;
     }
 
-    public String getFirstName() {
+    public  String getFirstName() {
         return firstName;
     }
 
@@ -46,7 +46,7 @@ public class UserDataResponse {
         return middleName;
     }
 
-    public String getLastName() {
+    public  String getLastName() {
         return lastName;
     }
 

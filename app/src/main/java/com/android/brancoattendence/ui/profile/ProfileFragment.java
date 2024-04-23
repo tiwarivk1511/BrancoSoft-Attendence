@@ -74,13 +74,13 @@ public class ProfileFragment extends Fragment {
                     // Update UI with user data
                     updateUI(response.body());
                 } else {
-                    Toast.makeText(getContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<UserDataResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
             }
         });
 
