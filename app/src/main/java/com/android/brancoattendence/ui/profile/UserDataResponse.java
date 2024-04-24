@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class UserDataResponse {
 
     @SerializedName("emp_id")
-    private static String employeeId;
+    private String employeeId;
 
     @SerializedName("f_name")
     private String firstName;
@@ -30,12 +30,13 @@ public class UserDataResponse {
     private String dateOfJoining;
 
 
-    public static String getEmployeeId() {
-        return employeeId;
-    }
 
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
     }
 
     public  String getFirstName() {

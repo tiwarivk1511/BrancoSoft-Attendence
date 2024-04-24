@@ -1,46 +1,40 @@
 package com.android.brancoattendence.ui.home;
 
-import static android.content.Context.MODE_PRIVATE;
+import static androidx.core.content.ContextCompat.checkSelfPermission;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Intent;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CalendarView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.ExistingWorkPolicy;
-import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.android.brancoattendence.ApiService;
-import com.android.brancoattendence.Attendance;
-import com.android.brancoattendence.AttendanceAdapter;
 import com.android.brancoattendence.DateAdapter;
 import com.android.brancoattendence.HostURL;
-import com.android.brancoattendence.LocationWorker;
 import com.android.brancoattendence.R;
 import com.android.brancoattendence.WeeklyAttendanceAdapter;
 import com.android.brancoattendence.databinding.FragmentHomeBinding;
 import com.android.brancoattendence.ui.profile.UserDataResponse;
 
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -85,20 +79,9 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         WeeklyAttendanceAdapter adapter1 = new WeeklyAttendanceAdapter(requireContext(), new ArrayList<>());
         recyclerViewAttendance.setAdapter(adapter1);
 
+
         // Fetch user profile data for current user's name
         fetchUserData();
-
-        // Schedule the periodic work to fetch location and update address
-        PeriodicWorkRequest locationWorkRequest =
-                new PeriodicWorkRequest.Builder(LocationWorker.class, 15, TimeUnit.MINUTES)
-                        .addTag(LOCATION_WORK_TAG)
-                        .build();
-        WorkManager.getInstance(requireContext())
-                .enqueueUniquePeriodicWork(LOCATION_WORK_TAG, ExistingPeriodicWorkPolicy.REPLACE, locationWorkRequest);
-
-
-        // Load address from SharedPreferences and update UI
-        updateAddressUI();
 
         //navigate to view all attendance
         binding.viewAllAttendeceTxt.setOnClickListener(
@@ -112,10 +95,57 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         return root;
     }
 
+    // Method to get the current location of the User
+    private void getCurrentLocation() {
+        // Check if the app has permission to access fine location
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // Request permission to access fine location
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        } else {
+            // Permission already granted, proceed to get the current location
+            // Your code to get the current location goes here
+            LocationManager locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
+            if (locationManager != null) {
+                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (location != null) {
+                    // Location found, do something with it
+                    // Your code to handle the location goes here
+                    String address = String.format(
+                            "%s, %s",
+                            location.getLatitude(),
+                            location.getLongitude()
+                    );
+
+
+                } else {
+                    // Location not found, handle accordingly
+                    // Your code to handle the location not found goes here
+                }
+            }
+
+        }
+    }
+
+    // Override onRequestPermissionsResult to handle the result of the permission request
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, proceed to get the current location
+                // Your code to get the current location goes here
+            } else {
+                // Permission denied, handle accordingly (e.g., show a message to the user)
+                Toast.makeText(getContext(), "Permission denied to access location", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
     // Fetch user profile data
     private void fetchUserData() {
         // Retrieve token from SharedPreferences
         String token = retrieveTokenFromSharedPreferences();
+        System.out.println("Token: " + token);
 
         System.out.println("Token: " + token);
         // Check if token is null
@@ -158,7 +188,9 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
     private String retrieveTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        return preferences.getString("token", null);
+        String token = preferences.getString("token", null);
+        System.out.println("Token: " + token);
+        return token;
     }
 
     private void updateUI(UserDataResponse userData) {
@@ -183,6 +215,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         }
         return dayOfWeeks;
     }
+
 
 
     @SuppressLint("ResourceAsColor")
@@ -223,14 +256,13 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         return -1;
     }
 
-    private void updateAddressUI() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        String address = sharedPreferences.getString("address", "");
-        if (!address.isEmpty()) {
-            TextView textViewAddress = binding.currentAddress;
-            textViewAddress.setText(address);
-        }
-    }
+//    private void updateAddressUI() {
+//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+//        String address = sharedPreferences.getString("address", "");
+//        if (!address.isEmpty()) {
+//            Toast.makeText(requireContext(), "Current location: "+address, Toast.LENGTH_SHORT).show();
+//        }
+//    }
 
     @Override
     public void onDestroyView() {

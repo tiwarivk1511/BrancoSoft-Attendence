@@ -13,6 +13,7 @@ import com.android.brancoattendence.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdapter.ViewHolder> {
@@ -20,9 +21,9 @@ public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdap
     private List<AttendanceData> attendanceList;
     private Context context;
 
-    public AllAttendanceAdapter(Context context, List<AttendanceData> attendanceList) {
+    public AllAttendanceAdapter(Context context) {
         this.context = context;
-        this.attendanceList = attendanceList;
+        this.attendanceList = new ArrayList<>(); // Initialize the list
     }
 
     @NonNull
@@ -35,14 +36,23 @@ public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdap
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AttendanceData attendanceData = attendanceList.get(position);
-        if (attendanceData != null) {
+        if (attendanceData != null && attendanceData.getDate() != null) { // Check for non-null date object
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a");
 
-            String formattedDate = dateFormat.format(attendanceData.getDate());
+            String formattedDate = "";
+            try {
+                formattedDate = dateFormat.format(attendanceData.getDate());
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                formattedDate = "Invalid Date"; // Set a default value in case of an error
+            }
+
+            // Format check-in and check-out times
             String formattedCheckInTime = timeFormat.format(attendanceData.getCheckInTime());
             String formattedCheckOutTime = timeFormat.format(attendanceData.getCheckOutTime());
 
+            // Set formatted values to TextViews
             holder.date.setText(formattedDate);
             holder.checkinTime.setText(formattedCheckInTime);
             holder.checkOutTime.setText(formattedCheckOutTime);
@@ -55,8 +65,10 @@ public class AllAttendanceAdapter extends RecyclerView.Adapter<AllAttendanceAdap
     }
 
     public void setData(List<AttendanceData> filteredList) {
-        this.attendanceList = filteredList;
-        notifyDataSetChanged();
+        this.attendanceList.clear(); // Clear existing data
+        if (filteredList != null) {
+            this.attendanceList.addAll(filteredList); // Add new data
+        }        notifyDataSetChanged();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

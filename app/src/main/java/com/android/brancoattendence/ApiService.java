@@ -1,15 +1,13 @@
 package com.android.brancoattendence;
 
-import com.android.brancoattendence.Attendence.CheckInResponse;
-import com.android.brancoattendence.Attendence.CheckOutResponse;
+
 import com.android.brancoattendence.RecyclerAdepters.AttendanceData;
-import com.android.brancoattendence.RecyclerAdepters.AttendanceResponse;
 import com.android.brancoattendence.ui.profile.UserDataResponse;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -41,20 +39,6 @@ public interface ApiService {
                 .build();
     }
 
-    @FormUrlEncoded
-    @POST("check_in")
-    Call<CheckInResponse> checkIn(
-            @Header("Authorization") String token,
-            @Field("check_in") String check_in
-    );
-
-    @FormUrlEncoded
-    @PUT("check_out")
-    Call<CheckOutResponse> checkOut(
-            @Header("Authorization") String token,
-            @Field("attd_id") String attendanceId,
-            @Field("check_out") String check_out
-    );
 
     @FormUrlEncoded
     @POST("login")
@@ -76,6 +60,4 @@ public interface ApiService {
 
     @GET("attendances")
     Call<List<AttendanceData>> getAttendances(@Header("Authorization") String token);
-
-
 }

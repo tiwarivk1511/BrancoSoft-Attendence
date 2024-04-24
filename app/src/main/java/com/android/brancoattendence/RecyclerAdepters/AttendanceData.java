@@ -4,7 +4,7 @@ public class AttendanceData {
     private String date;
     private String checkInTime;
     private String checkOutTime;
-    private static int EmpId;
+    private static int empId;
 
     // Constructor
     public AttendanceData(String date, String checkInTime, String checkOutTime) {
@@ -13,17 +13,16 @@ public class AttendanceData {
         this.checkOutTime = checkOutTime;
     }
 
-
-
-    // Getter and setter methods
+    // Getter and setter methods for employee ID
     public static int getEmpId() {
-        return EmpId;
+        return empId;
     }
 
     public void setEmpId(String empId) {
-        EmpId = Integer.parseInt(empId);
+        empId = String.valueOf(Integer.parseInt(empId));
     }
 
+    // Getter and setter methods for date
     public String getDate() {
         return date;
     }
@@ -49,6 +48,4 @@ public class AttendanceData {
     public void setCheckOutTime(String checkOutTime) {
         this.checkOutTime = checkOutTime;
     }
-
-
 }

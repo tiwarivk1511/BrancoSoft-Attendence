@@ -69,7 +69,7 @@ public class ProfileFragment extends Fragment {
 
         call.enqueue(new Callback<UserDataResponse>() {
             @Override
-            public void onResponse(Call<UserDataResponse> call, Response<UserDataResponse> response) {
+            public void onResponse(@NonNull Call<UserDataResponse> call, @NonNull Response<UserDataResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     // Update UI with user data
                     updateUI(response.body());
@@ -79,7 +79,7 @@ public class ProfileFragment extends Fragment {
             }
 
             @Override
-            public void onFailure(Call<UserDataResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<UserDataResponse> call, @NonNull Throwable t) {
                 Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
             }
         });

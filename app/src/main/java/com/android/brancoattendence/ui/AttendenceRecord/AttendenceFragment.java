@@ -1,9 +1,7 @@
 package com.android.brancoattendence.ui.AttendenceRecord;
 
-import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -14,16 +12,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.brancoattendence.ApiService;
-import com.android.brancoattendence.Attendence.CheckInResponse;
-import com.android.brancoattendence.Attendence.CheckOutResponse;
 import com.android.brancoattendence.HostURL;
-import com.android.brancoattendence.R;
 import com.android.brancoattendence.RecyclerAdepters.AllAttendanceAdapter;
 import com.android.brancoattendence.RecyclerAdepters.AttendanceData;
 import com.android.brancoattendence.databinding.FragmentAttendenceBinding;
-import com.android.brancoattendence.ui.profile.UserDataResponse;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -44,25 +39,22 @@ public class AttendenceFragment extends Fragment {
     private FragmentAttendenceBinding binding;
     private List<AttendanceData> attendanceList = new ArrayList<>();
     private String date;
-    private String checkInTime = CheckInResponse.getCheckInTime();
-    private String checkOutTime= CheckOutResponse.getCheckOutTime();
+
+
     private AllAttendanceAdapter adapter;
 
+    RecyclerView recyclerView;
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment using view binding
         binding = FragmentAttendenceBinding.inflate(inflater, container, false);
-
-        // Set layout manager for the RecyclerView
-        binding.AttendenceRecords.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-        // Initialize adapter
-        adapter = new AllAttendanceAdapter(requireContext(),attendanceList);
-        binding.AttendenceRecords.setAdapter(adapter);
+        recyclerView = binding.AttendenceRecords;
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new AllAttendanceAdapter(requireContext());
+//        recyclerView.setAdapter(adapter);
 
         // Fetch attendance data on fragment creation
-        fetchAttendanceData();
+        fetchDataFromAPI();
 
         // Set click listener for filter button
         binding.filterTxt.setOnClickListener(v -> showDatePickerDialog());
@@ -70,8 +62,7 @@ public class AttendenceFragment extends Fragment {
         return binding.getRoot();
     }
 
-    private void fetchAttendanceData() {
-        String token = getUserToken();
+    private void fetchDataFromAPI() {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(HostURL.getBaseUrl())
                 .addConverterFactory(GsonConverterFactory.create())
@@ -79,37 +70,27 @@ public class AttendenceFragment extends Fragment {
 
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<List<AttendanceData>> call = apiService.getAttendances(token);
+        String token =getUserToken(); // Replace with your actual token
+        Call<List<AttendanceData>> call = apiService.getAttendances("Bearer " + token);
+
         call.enqueue(new Callback<List<AttendanceData>>() {
-            @SuppressLint("NotifyDataSetChanged")
             @Override
-            public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
+            public void onResponse(@NonNull Call<List<AttendanceData>> call, @NonNull Response<List<AttendanceData>> response) {
                 if (response.isSuccessful()) {
-                    List<AttendanceData> allAttendance = response.body();
-                    if (allAttendance != null) {
-                        // Filter attendance records for the current user
-                        List<AttendanceData> currentUserAttendance = new ArrayList<>();
-                        int currentUserId = Integer.parseInt(UserDataResponse.getEmployeeId()); // Assuming you have a method to get the current user's ID
-                        for (AttendanceData data : allAttendance) {
-                            if (AttendanceData.getEmpId() == currentUserId) {
-                                currentUserAttendance.add(data);
-                            }
-                        }
-                        // Update the adapter with attendance records for the current user
-                        attendanceList.clear();
-                        attendanceList.addAll(currentUserAttendance);
-                        adapter.notifyDataSetChanged();
-                    } else {
-                        Toast.makeText(requireContext(), "No attendance records found", Toast.LENGTH_SHORT).show();
+                    List<AttendanceData> attendanceList = response.body();
+
+                    System.out.println("API Response:"+ response.body());
+                    if (attendanceList != null) {
+                        adapter.setData(attendanceList);
                     }
                 } else {
-                    Toast.makeText(requireContext(), "Failed to fetch attendance records", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
-                Toast.makeText(requireContext(), "Network error. Please try again later.", Toast.LENGTH_SHORT).show();
+            public void onFailure(@NonNull Call<List<AttendanceData>> call, @NonNull Throwable t) {
+                Toast.makeText(getContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
             }
         });
     }
