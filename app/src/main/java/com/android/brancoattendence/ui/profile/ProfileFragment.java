@@ -90,21 +90,21 @@ public class ProfileFragment extends Fragment {
         String MiddName = userData.getMiddleName();
         if (MiddName == null) {
             MiddName = "";
-        }
-        else {
+        } else {
             MiddName = " " + MiddName;
         }
 
-        String FullName = userData.getFirstName() +MiddName+ " " + userData.getLastName();
+        String FullName = userData.getFirstName() + MiddName + " " + userData.getLastName();
         // Update UI with user data
-        binding.employeeId.setText(userData.getEmployeeId());
-        binding.userName.setText(FullName);
-        binding.userEmail.setText(userData.getEmail());
-        binding.contactNo.setText(userData.getContactNo());
-        binding.department.setText(userData.getDepartment());
-        binding.designation.setText(userData.getDesignation());
-        binding.dateOfJoining.setText(userData.getDateOfJoining());
+        binding.employeeId.setText(String.valueOf(userData.getEmployeeId())); // Ensure to convert to String
+        binding.userName.setText(FullName != null ? FullName : "");
+        binding.userEmail.setText(userData.getEmail() != null ? userData.getEmail() : "");
+        binding.contactNo.setText(userData.getContactNo() != null ? userData.getContactNo() : "");
+        binding.department.setText(userData.getDepartment() != null ? userData.getDepartment() : "");
+        binding.designation.setText(userData.getDesignation() != null ? userData.getDesignation() : "");
+        binding.dateOfJoining.setText(userData.getDateOfJoining() != null ? userData.getDateOfJoining() : "");
     }
+
 
     private String retrieveTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());

@@ -15,9 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.brancoattendence.ApiService;
+import com.android.brancoattendence.AttendanceData;
 import com.android.brancoattendence.HostURL;
-import com.android.brancoattendence.RecyclerAdepters.AllAttendanceAdapter;
-import com.android.brancoattendence.RecyclerAdepters.AttendanceData;
 import com.android.brancoattendence.databinding.FragmentAttendenceBinding;
 
 import java.text.ParseException;
@@ -41,7 +40,6 @@ public class AttendenceFragment extends Fragment {
     private String date;
 
 
-    private AllAttendanceAdapter adapter;
 
     RecyclerView recyclerView;
     @Override
@@ -50,7 +48,7 @@ public class AttendenceFragment extends Fragment {
         binding = FragmentAttendenceBinding.inflate(inflater, container, false);
         recyclerView = binding.AttendenceRecords;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new AllAttendanceAdapter(requireContext());
+
 //        recyclerView.setAdapter(adapter);
 
         // Fetch attendance data on fragment creation
@@ -81,7 +79,7 @@ public class AttendenceFragment extends Fragment {
 
                     System.out.println("API Response:"+ response.body());
                     if (attendanceList != null) {
-                        adapter.setData(attendanceList);
+//                        adapter.setData(attendanceList);
                     }
                 } else {
                     Toast.makeText(getContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
@@ -138,7 +136,7 @@ public class AttendenceFragment extends Fragment {
             }
         }
         // Update the RecyclerView with filtered data
-        adapter.setData(filteredList);
+//        adapter.setData(filteredList);
     }
 
     private void filterAttendanceByDateRange(String startDate, String endDate) {
@@ -150,7 +148,7 @@ public class AttendenceFragment extends Fragment {
             }
         }
         // Update the RecyclerView with filtered data
-        adapter.setData(filteredList);
+//        adapter.setData(filteredList);
     }
 
     private boolean isDateInRange(String date, String startDate, String endDate) {

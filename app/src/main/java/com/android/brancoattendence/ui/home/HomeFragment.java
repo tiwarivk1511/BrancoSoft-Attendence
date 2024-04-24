@@ -22,15 +22,12 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.ExistingPeriodicWorkPolicy;
-import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
 import com.android.brancoattendence.ApiService;
 import com.android.brancoattendence.DateAdapter;
 import com.android.brancoattendence.HostURL;
 import com.android.brancoattendence.R;
-import com.android.brancoattendence.WeeklyAttendanceAdapter;
 import com.android.brancoattendence.databinding.FragmentHomeBinding;
 import com.android.brancoattendence.ui.profile.UserDataResponse;
 
@@ -40,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -75,9 +71,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         RecyclerView recyclerViewAttendance = binding.WeeklyAttendanceRecords;
         recyclerViewAttendance.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // Load weekly attendance records
-        WeeklyAttendanceAdapter adapter1 = new WeeklyAttendanceAdapter(requireContext(), new ArrayList<>());
-        recyclerViewAttendance.setAdapter(adapter1);
+
 
 
         // Fetch user profile data for current user's name
@@ -116,6 +110,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
                             location.getLatitude(),
                             location.getLongitude()
                     );
+
 
 
                 } else {

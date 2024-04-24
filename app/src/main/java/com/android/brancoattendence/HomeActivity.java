@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Window;
@@ -20,10 +22,16 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.android.brancoattendence.databinding.ActivityHomeBinding;
+import com.android.brancoattendence.ui.profile.UserDataResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import retrofit2.Call;
@@ -36,7 +44,9 @@ public class HomeActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private ActivityHomeBinding binding;
+    AttendanceManager mAttendanceManager;
 
+    String address = "";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +64,16 @@ public class HomeActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_home);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(binding.navView, navController);
+
+        // Initialize ApiService (assuming Retrofit is properly configured)
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(HostURL.getBaseUrl())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        ApiService mApiService = retrofit.create(ApiService.class);
+
+        // Initialize AttendanceManager with ApiService and context
+        mAttendanceManager = new AttendanceManager(mApiService, this);
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             if (destination.getId() == R.id.nav_profile || destination.getId() == R.id.nav_attendance) {
@@ -155,6 +175,7 @@ public class HomeActivity extends AppCompatActivity {
 
                             boolean isWithinRange = isWithinCoordinatesRange(latitude, longitude);
                             markAttendance(isWithinRange);
+                            address = getAddressFromCoordinates(latitude, longitude);
                         }
                     })
                     .addOnFailureListener(e -> e.printStackTrace());
@@ -166,16 +187,45 @@ public class HomeActivity extends AppCompatActivity {
 
     }
 
+    private String getAddressFromCoordinates(double latitude, double longitude) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        String currentAddress = "";
+        try {
+            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+            if (!addresses.isEmpty()) {
+                currentAddress = addresses.get(0).getAddressLine(0);
+                System.out.println("Address: " + address);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return currentAddress;
+    }
+
+
     private void markAttendance(boolean isWithinRange) {
-        String currentTime = String.valueOf(Calendar.getInstance().getTime());
-        if (isWithinRange){
+        //get current date
+            Date currentDate = new Date();
+            String date = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(currentDate);
+
+            //getCurrent Time
+            String time = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(currentDate);
+
+        if (isWithinRange) {
+            AttendanceData data = new AttendanceData();
+            data.setEmployeeId(UserDataResponse.getEmployeeId()); // Set employee ID
+            data.setDate(date); // Set date
+            data.setCheckIn(time); // Set check-in time
+            data.setLocation(address); // Set location
+
+           AttendanceManager.checkIn(retrieveTokenFromSharedPreferences());
+
 
         } else {
 
         }
-
     }
-
 
     private boolean isUserLoggedIn() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
