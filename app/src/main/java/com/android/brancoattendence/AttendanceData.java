@@ -14,13 +14,17 @@ public class AttendanceData {
     private String date;
 
     @SerializedName("check_in")
-    private String checkIn;
+    private static String checkIn;
 
     @SerializedName("check_out")
     private String checkOut;
 
     @SerializedName("location")
     private String location;
+
+
+
+
     // Add getters and setters
 
 
@@ -48,12 +52,12 @@ public class AttendanceData {
         this.date = date;
     }
 
-    public String getCheckIn() {
+    public static String getCheckIn() {
         return checkIn;
     }
 
     public void setCheckIn(String checkIn) {
-        this.checkIn = checkIn;
+       this.checkIn = checkIn;
     }
 
     public String getCheckOut() {

@@ -105,7 +105,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="28dp"
                     android:gravity="center"
-                    android:hint="09:30 AM"
+                    android:hint="--:-- AM"
                     android:textSize="18sp"
                     android:textStyle="bold"
 
@@ -171,7 +171,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="28dp"
                     android:gravity="center"
-                    android:hint="06:30 PM"
+                    android:hint="--:-- PM"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:layout_marginTop="20dp"

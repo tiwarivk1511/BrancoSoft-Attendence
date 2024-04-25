@@ -61,7 +61,7 @@ public interface ApiService {
     @GET("attendances")
     Call<List<AttendanceData>> getAttendances(@Header("Authorization") String token);
 
-    @POST("api/attendances/checkin")
-    Call<AttendanceResponce> checkIn(@Query("token") String token, @Query("check_in_time") String checkInTime);
+    @POST("attendances")
+    Call<AttendanceResponce> checkIn(@Header("Authorization") String token, @Query("check_in") String checkInTime);
 
 }

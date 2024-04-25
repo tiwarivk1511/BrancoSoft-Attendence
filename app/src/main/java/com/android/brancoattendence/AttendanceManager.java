@@ -1,14 +1,21 @@
 package com.android.brancoattendence;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
+import com.squareup.okhttp.RequestBody;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import okhttp3.FormBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -25,7 +32,7 @@ public class AttendanceManager {
 
     public static void checkIn(String token) {
         // Get current time
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
         String currentTime = sdf.format(new Date());
 
         // Call checkIn API
@@ -34,6 +41,7 @@ public class AttendanceManager {
             @Override
             public void onResponse(Call<AttendanceResponce> call, Response<AttendanceResponce> response) {
                 if (response.isSuccessful() && response.body() != null) {
+
                     Toast.makeText(mContext, "Check-in successful", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(mContext, "Failed to check-in", Toast.LENGTH_SHORT).show();
@@ -46,6 +54,8 @@ public class AttendanceManager {
             }
         });
     }
+
+
     //get token
     private String retrieveTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mContext);

@@ -4,6 +4,7 @@ public class AttendanceResponce {
     private int status;
     private boolean success;
     private String message;
+    private String id;
     private static AttendanceData data;
 
     public int getStatus() {
@@ -36,5 +37,12 @@ public class AttendanceResponce {
 
     public void setData(AttendanceData data) {
         this.data = data;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+    public String getId() {
+        return id;
     }
 }
