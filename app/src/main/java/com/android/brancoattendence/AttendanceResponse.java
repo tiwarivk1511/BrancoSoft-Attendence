@@ -1,10 +1,14 @@
 package com.android.brancoattendence;
 
-public class AttendanceResponce {
+public class AttendanceResponse {
     private int status;
     private boolean success;
+    private String Date;
+    private  String InTime;
+
+    private String OutTime;
     private String message;
-    private String id;
+    private static String id;
     private static AttendanceData data;
 
     public int getStatus() {
@@ -31,6 +35,30 @@ public class AttendanceResponce {
         this.message = message;
     }
 
+    public String getDate() {
+        return Date;
+    }
+
+    public void setDate(String date) {
+        Date = date;
+    }
+
+    public String getInTime(String currentTime) {
+        return InTime;
+    }
+
+    public void setInTime(String inTime) {
+        InTime = inTime;
+    }
+
+    public String getOutTime() {
+        return OutTime;
+    }
+
+    public void setOutTime(String outTime) {
+        OutTime = outTime;
+    }
+
     public static AttendanceData getData() {
         return data;
     }
@@ -42,7 +70,7 @@ public class AttendanceResponce {
     public void setId(String id) {
         this.id = id;
     }
-    public String getId() {
+    public static String getId() {
         return id;
     }
 }

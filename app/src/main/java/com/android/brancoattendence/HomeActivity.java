@@ -154,10 +154,10 @@ public class HomeActivity extends AppCompatActivity {
                 .build();
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<AttendanceResponce> call = apiService.checkIn("Bearer " + token, currentTime);
-        call.enqueue(new Callback<AttendanceResponce>() {
+        Call<AttendanceResponse> call = apiService.checkIn("Bearer " + token, currentTime);
+        call.enqueue(new Callback<AttendanceResponse>() {
             @Override
-            public void onResponse(@NonNull Call<AttendanceResponce> call, @NonNull Response<AttendanceResponce> response) {
+            public void onResponse(@NonNull Call<AttendanceResponse> call, @NonNull Response<AttendanceResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     System.out.println("Check-in API response: " + response.body());
                     Toast.makeText(HomeActivity.this, "Check-in successful", Toast.LENGTH_SHORT).show();
@@ -167,11 +167,44 @@ public class HomeActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(@NonNull Call<AttendanceResponce> call, Throwable t) {
+            public void onFailure(@NonNull Call<AttendanceResponse> call, Throwable t) {
                 Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
             }
         });
     }
+
+
+    private void performCheckOut(int attendanceId) {
+        String baseUrl = HostURL.getBaseUrl(); // Update base URL
+        String token = retrieveTokenFromSharedPreferences();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        String currentTime = sdf.format(new Date());
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        ApiService apiService = retrofit.create(ApiService.class);
+
+        Call<AttendanceResponse> call = apiService.checkOut("Bearer " + token, attendanceId, currentTime);
+        call.enqueue(new Callback<AttendanceResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<AttendanceResponse> call, @NonNull Response<AttendanceResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    System.out.println("Check-out API response: " + response.body());
+                    Toast.makeText(HomeActivity.this, "Check-out successful", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<AttendanceResponse> call, Throwable t) {
+                Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     private void clearTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -260,6 +293,14 @@ public class HomeActivity extends AppCompatActivity {
             performCheckIn();
         }  else {// Handle when user is not within range
 
+            String attendanceID = AttendanceResponse.getId();
+            if (attendanceID != null) {
+                performCheckOut(Integer.parseInt(attendanceID));
+            } else {
+                // Handle the case where attendanceID is null
+                // For example, show an error message or perform some other action
+                Toast.makeText(HomeActivity.this, "Attendance ID is null", Toast.LENGTH_SHORT).show();
+            }
             Toast.makeText(this, "You are not within range", Toast.LENGTH_SHORT).show();
         }
 

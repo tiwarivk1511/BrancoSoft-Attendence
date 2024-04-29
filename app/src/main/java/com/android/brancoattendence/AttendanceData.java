@@ -2,12 +2,10 @@ package com.android.brancoattendence;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Date;
-
 public class AttendanceData {
 
     @SerializedName("attd_id")
-    private int attendanceId;
+    private static int attendanceId;
 
     @SerializedName("emp_id")
     private int employeeId;
@@ -19,7 +17,7 @@ public class AttendanceData {
     private static String checkIn;
 
     @SerializedName("check_out")
-    private String checkOut;
+    private static String checkOut;
 
     @SerializedName("location")
     private String location;
@@ -28,9 +26,7 @@ public class AttendanceData {
 
 
     // Add getters and setters
-
-
-    public int getAttendanceId() {
+    public static int getAttendanceId() {
         return attendanceId;
     }
 
@@ -62,7 +58,7 @@ public class AttendanceData {
        this.checkIn = checkIn;
     }
 
-    public String getCheckOut() {
+    public static String getCheckOut() {
         return checkOut;
     }
 

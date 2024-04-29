@@ -51,12 +51,27 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.At
 
     @Override
     public void onBindViewHolder(@NonNull AttendanceViewHolder holder, int position) {
-        // Bind the data to the views
+        // Get the AttendanceData object at the specified position
         AttendanceData attendanceData = attendanceList.get(position);
-        holder.dateTextView.setText(String.valueOf(attendanceData.getDate()));
-        holder.checkInTextView.setText(attendanceData.getCheckIn());
-        holder.checkOutTextView.setText(attendanceData.getCheckOut());
+
+        // Set the data to the views
+        holder.dateTextView.setText(attendanceData.getDate());
+
+        // Check if check-in time is available
+        if (attendanceData.getCheckIn() != null && !attendanceData.getCheckIn().isEmpty()) {
+            holder.checkInTextView.setText("Check-in: " + attendanceData.getCheckIn());
+        } else {
+            holder.checkInTextView.setText("Check-in: N/A");
+        }
+
+        // Check if check-out time is available
+        if (attendanceData.getCheckOut() != null && !attendanceData.getCheckOut().isEmpty()) {
+            holder.checkOutTextView.setText("Check-out: " + attendanceData.getCheckOut());
+        } else {
+            holder.checkOutTextView.setText("Check-out: N/A");
+        }
     }
+
 
     @Override
     public int getItemCount() {

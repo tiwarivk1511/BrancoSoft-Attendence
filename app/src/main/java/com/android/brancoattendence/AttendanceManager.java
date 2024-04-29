@@ -6,16 +6,9 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
-import com.squareup.okhttp.RequestBody;
-
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 
-import okhttp3.FormBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -36,10 +29,10 @@ public class AttendanceManager {
         String currentTime = sdf.format(new Date());
 
         // Call checkIn API
-        Call<AttendanceResponce> call = mApiService.checkIn(token, currentTime);
-        call.enqueue(new Callback<AttendanceResponce>() {
+        Call<AttendanceResponse> call = mApiService.checkIn(token, currentTime);
+        call.enqueue(new Callback<AttendanceResponse>() {
             @Override
-            public void onResponse(Call<AttendanceResponce> call, Response<AttendanceResponce> response) {
+            public void onResponse(Call<AttendanceResponse> call, Response<AttendanceResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
 
                     Toast.makeText(mContext, "Check-in successful", Toast.LENGTH_SHORT).show();
@@ -49,7 +42,7 @@ public class AttendanceManager {
             }
 
             @Override
-            public void onFailure(Call<AttendanceResponce> call, Throwable t) {
+            public void onFailure(Call<AttendanceResponse> call, Throwable t) {
                 Toast.makeText(mContext, "Failed to check-in", Toast.LENGTH_SHORT).show();
             }
         });

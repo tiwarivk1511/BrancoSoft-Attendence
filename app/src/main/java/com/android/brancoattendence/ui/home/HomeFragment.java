@@ -26,7 +26,6 @@ import androidx.work.WorkManager;
 
 import com.android.brancoattendence.ApiService;
 import com.android.brancoattendence.AttendanceData;
-import com.android.brancoattendence.AttendanceResponce;
 import com.android.brancoattendence.DateAdapter;
 import com.android.brancoattendence.HostURL;
 import com.android.brancoattendence.R;
@@ -69,6 +68,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         adapter.highlightTodayAndScroll(recyclerViewDates);
 
         binding.checkInTime.setText(AttendanceData.getCheckIn());
+        binding.checkOutTime.setText(AttendanceData.getCheckOut());
 
         // Load weekly attendance records
         RecyclerView recyclerViewAttendance = binding.WeeklyAttendanceRecords;
