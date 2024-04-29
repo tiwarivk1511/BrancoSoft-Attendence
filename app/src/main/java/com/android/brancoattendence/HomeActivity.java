@@ -71,7 +71,7 @@ public class HomeActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(binding.navView, navController);
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://192.168.1.12:8000/api/") // Update base URL
+                .baseUrl(HostURL.getBaseUrl()) // Update base URL
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         ApiService mApiService = retrofit.create(ApiService.class);
@@ -105,7 +105,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void performLogOut() {
-        String baseUrl = "http://192.168.1.12:8000/api/"; // Update base URL
+        String baseUrl = HostURL.getBaseUrl(); // Update base URL
         String token = retrieveTokenFromSharedPreferences();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -118,7 +118,7 @@ public class HomeActivity extends AppCompatActivity {
 
         call.enqueue(new Callback<Void>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(@NonNull Call<Void> call, @NonNull Response<Void> response) {
                 if (response.isSuccessful()) {
                     clearTokenFromSharedPreferences();
                     Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
@@ -157,7 +157,7 @@ public class HomeActivity extends AppCompatActivity {
         Call<AttendanceResponce> call = apiService.checkIn("Bearer " + token, currentTime);
         call.enqueue(new Callback<AttendanceResponce>() {
             @Override
-            public void onResponse(Call<AttendanceResponce> call, @NonNull Response<AttendanceResponce> response) {
+            public void onResponse(@NonNull Call<AttendanceResponce> call, @NonNull Response<AttendanceResponce> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     System.out.println("Check-in API response: " + response.body());
                     Toast.makeText(HomeActivity.this, "Check-in successful", Toast.LENGTH_SHORT).show();
@@ -167,7 +167,7 @@ public class HomeActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<AttendanceResponce> call, Throwable t) {
+            public void onFailure(@NonNull Call<AttendanceResponce> call, Throwable t) {
                 Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
             }
         });
@@ -258,9 +258,11 @@ public class HomeActivity extends AppCompatActivity {
             data.setLocation(address);
 
             performCheckIn();
-        } else {
-            // Handle when user is not within range
+        }  else {// Handle when user is not within range
+
+            Toast.makeText(this, "You are not within range", Toast.LENGTH_SHORT).show();
         }
+
     }
 
     private boolean isUserLoggedIn() {
@@ -279,7 +281,9 @@ public class HomeActivity extends AppCompatActivity {
                 + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(officeLatitude))
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = earthRadius * c;
-        return distance <= 0.5;
+        double distance = earthRadius * c * 1000; // Convert distance to meters
+
+        return distance <= 25; // Check if distance is less than or equal to 5 meters
     }
+
 }

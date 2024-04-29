@@ -2,6 +2,8 @@ package com.android.brancoattendence;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Date;
+
 public class AttendanceData {
 
     @SerializedName("attd_id")

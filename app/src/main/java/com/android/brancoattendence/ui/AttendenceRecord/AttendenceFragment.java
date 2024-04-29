@@ -1,12 +1,13 @@
 package com.android.brancoattendence.ui.AttendenceRecord;
 
-import android.app.DatePickerDialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,13 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.brancoattendence.ApiService;
 import com.android.brancoattendence.AttendanceData;
 import com.android.brancoattendence.HostURL;
+import com.android.brancoattendence.R;
 import com.android.brancoattendence.databinding.FragmentAttendenceBinding;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 import retrofit2.Call;
@@ -37,132 +36,168 @@ public class AttendenceFragment extends Fragment {
     private static final String TOKEN_KEY = "token";
     private FragmentAttendenceBinding binding;
     private List<AttendanceData> attendanceList = new ArrayList<>();
-    private String date;
+    private AttendanceAdapter adapterAttendance;
+    private String Year;
+    private String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+    private String SelectedMonth;
 
-
-
-    RecyclerView recyclerView;
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         binding = FragmentAttendenceBinding.inflate(inflater, container, false);
-        recyclerView = binding.AttendenceRecords;
+        View view = binding.getRoot();
+
+        // Initialize RecyclerView
+        RecyclerView recyclerView = binding.AttendenceRecords;
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapterAttendance = new AttendanceAdapter(attendanceList);
+        recyclerView.setAdapter(adapterAttendance);
 
-//        recyclerView.setAdapter(adapter);
-
-        // Fetch attendance data on fragment creation
+        // Fetch all attendance data by default
         fetchDataFromAPI();
 
-        // Set click listener for filter button
-        binding.filterTxt.setOnClickListener(v -> showDatePickerDialog());
+        // Create an AutoCompleteTextView to select the month
+        AutoCompleteTextView autoCompleteTextView = binding.AutoCompleteTextViewMonths;
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), R.layout.list_items, months);
+        autoCompleteTextView.setAdapter(adapter);
 
-        return binding.getRoot();
+        autoCompleteTextView.setOnItemClickListener((parent, view1, position, id) -> {
+            String monthItem = parent.getItemAtPosition(position).toString();
+            Toast.makeText(getContext(), "Selected: " + monthItem, Toast.LENGTH_SHORT).show();
+            SelectedMonth = monthItem;
+            filterDataByMonthAndYear(); // Filter data when month is selected
+        });
+
+        // Create a AutoCompleteTextView to select year from 2010 to current year
+        AutoCompleteTextView autoCompleteTextViewYear = binding.AutoCompleteTextViewYears;
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        String[] years = new String[currentYear - 2010 + 1];
+        for (int i = 0; i < years.length; i++) {
+            years[i] = String.valueOf(currentYear - i);
+        }
+        ArrayAdapter<String> yearAdapter = new ArrayAdapter<>(requireContext(), R.layout.list_items, years);
+        autoCompleteTextViewYear.setAdapter(yearAdapter);
+
+        autoCompleteTextViewYear.setOnItemClickListener((parent, view12, position, id) -> {
+            String yearItem = parent.getItemAtPosition(position).toString();
+            Toast.makeText(getContext(), "Selected: " + yearItem, Toast.LENGTH_SHORT).show();
+            Year = yearItem;
+            filterDataByMonthAndYear(); // Filter data when year is selected
+        });
+
+        return view;
     }
 
     private void fetchDataFromAPI() {
+        // Get the user token
+        String token = getUserToken();
+
+        // Create Retrofit instance
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(HostURL.getBaseUrl())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
+        // Create ApiService instance
         ApiService apiService = retrofit.create(ApiService.class);
 
-        String token =getUserToken(); // Replace with your actual token
+        // Make network request using Retrofit to get all attendance data
         Call<List<AttendanceData>> call = apiService.getAttendances("Bearer " + token);
 
+        // Execute the request asynchronously
         call.enqueue(new Callback<List<AttendanceData>>() {
             @Override
-            public void onResponse(@NonNull Call<List<AttendanceData>> call, @NonNull Response<List<AttendanceData>> response) {
-                if (response.isSuccessful()) {
-                    List<AttendanceData> attendanceList = response.body();
-
-                    System.out.println("API Response:"+ response.body());
-                    if (attendanceList != null) {
-//                        adapter.setData(attendanceList);
-                    }
+            public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Handle successful response
+                    attendanceList.clear();
+                    attendanceList.addAll(response.body());
+                    adapterAttendance.notifyDataSetChanged();
                 } else {
-                    Toast.makeText(getContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
+                    // Handle unsuccessful response
+                    Toast.makeText(requireContext(), "Failed to fetch attendance data", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<List<AttendanceData>> call, @NonNull Throwable t) {
-                Toast.makeText(getContext(), "Failed to fetch data", Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
+                // Handle network errors
+                Toast.makeText(requireContext(), "Failed to fetch attendance data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    private void filterDataByMonthAndYear() {
+        List<AttendanceData> filteredList = new ArrayList<>();
+        for (AttendanceData data : attendanceList) {
+            // Check if the data matches the selected month and year
+            if (matchesSelectedMonthAndYear(data)) {
+                filteredList.add(data);
+            }
+        }
+        // Update the RecyclerView with filtered data
+        adapterAttendance.setData(filteredList);
+    }
+
+    private boolean matchesSelectedMonthAndYear(AttendanceData data) {
+        if (SelectedMonth == null || Year == null) {
+            return true; // No filter selected, so include all data
+        }
+
+        // Extract month and year from the data's date
+        Calendar cal = Calendar.getInstance();
+
+        int dataMonth = cal.get(Calendar.MONTH) + 1; // Month is zero-based
+        int dataYear = cal.get(Calendar.YEAR);
+
+        // Check if the data's month and year match the selected month and year
+        return months[dataMonth - 1].equalsIgnoreCase(SelectedMonth) && Year.equals(String.valueOf(dataYear));
+    }
+
+//    private void fetchDataFromAPI() {
+//        // Get the user token
+//        String token = getUserToken();
+//
+//        // Create Retrofit instance
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl(HostURL.getBaseUrl())
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//
+//        // Create ApiService instance
+//        ApiService apiService = retrofit.create(ApiService.class);
+//
+//        // Make network request using Retrofit to get all attendance data
+//        Call<List<AttendanceData>> call = apiService.getAttendances("Bearer " + token);
+//
+//        // Execute the request asynchronously
+//        call.enqueue(new Callback<List<AttendanceData>>() {
+//            @Override
+//            public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
+//                if (response.isSuccessful() && response.body() != null) {
+//                    // Handle successful response
+//                    attendanceList.clear();
+//                    attendanceList.addAll(response.body());
+//                    adapterAttendance.notifyDataSetChanged();
+//                } else {
+//                    // Handle unsuccessful response
+//                    Toast.makeText(requireContext(), "Failed to fetch attendance data", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
+//                // Handle network errors
+//                Toast.makeText(requireContext(), "Failed to fetch attendance data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
 
     private String getUserToken() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
         return sharedPreferences.getString(TOKEN_KEY, "");
     }
 
-    private void showDatePickerDialog() {
-        // Get the current year, month, and day
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-
-        // Create a DatePickerDialog and set the current date as default
-        DatePickerDialog datePickerDialog = new DatePickerDialog(requireContext(), (startDatePicker, startYear, startMonth, startDayOfMonth) -> {
-            Calendar selectedStartDate = Calendar.getInstance();
-            selectedStartDate.set(startYear, startMonth, startDayOfMonth);
-
-            // Format selected date
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            String startDate = sdf.format(selectedStartDate.getTime());
-
-            // Filter attendance records based on the selected date
-            filterAttendanceByDate(startDate);
-        }, year, month, dayOfMonth);
-
-        // Set maximum date for the date picker (current date)
-        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
-
-        datePickerDialog.show();
-    }
-
-
-
-    private void filterAttendanceByDate(String date) {
-        // Filter attendance records based on the selected date
-        List<AttendanceData> filteredList = new ArrayList<>();
-        for (AttendanceData data : attendanceList) {
-            if (data.getDate().equals(date)) {
-                filteredList.add(data);
-            }
-        }
-        // Update the RecyclerView with filtered data
-//        adapter.setData(filteredList);
-    }
-
-    private void filterAttendanceByDateRange(String startDate, String endDate) {
-        // Filter attendance records based on the selected date range
-        List<AttendanceData> filteredList = new ArrayList<>();
-        for (AttendanceData data : attendanceList) {
-            if (isDateInRange(data.getDate(), startDate, endDate)) {
-                filteredList.add(data);
-            }
-        }
-        // Update the RecyclerView with filtered data
-//        adapter.setData(filteredList);
-    }
-
-    private boolean isDateInRange(String date, String startDate, String endDate) {
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Date currentDate = sdf.parse(date);
-            Date start = sdf.parse(startDate);
-            Date end = sdf.parse(endDate);
-            return currentDate.after(start) && currentDate.before(end);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
     @Override
     public void onDestroyView() {
         super.onDestroyView();

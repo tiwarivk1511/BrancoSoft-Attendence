@@ -6,9 +6,8 @@
     android:layout_height="80dp"
     android:backgroundTint="@color/statusBarColor"
     app:cardCornerRadius="10dp"
-    android:padding="10dp"
-    android:layout_marginTop="5dp"
-    android:layout_marginBottom="5dp">
+    android:layout_marginBottom="4dp"
+    android:padding="10dp">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -46,7 +45,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="3dp"
-                android:src="@drawable/login" />
+                android:src="@drawable/login"
+                app:tint="@null" />
         </androidx.cardview.widget.CardView>
 
         <TextView
@@ -80,7 +80,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:padding="5dp"
-                android:src="@drawable/logout" />
+                android:src="@drawable/logout"
+                app:tint="@null" />
         </androidx.cardview.widget.CardView>
 
         <TextView
