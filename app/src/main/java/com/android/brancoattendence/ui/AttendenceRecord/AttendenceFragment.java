@@ -1,5 +1,6 @@
 package com.android.brancoattendence.ui.AttendenceRecord;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -34,6 +35,13 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
     public class AttendenceFragment extends Fragment {
 
+        private static final String BASE_URL = "http://192.168.1.11:8000/api/";
+        private static String TOKEN = null;
+
+        // Retrofit instance
+        private Retrofit retrofit;
+        // API service interface
+        private ApiService apiService;
         private static final String TOKEN_KEY = "token";
         private FragmentAttendenceBinding binding;
         private List<AttendanceData> attendanceList = new ArrayList<>();
@@ -50,12 +58,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
             binding = FragmentAttendenceBinding.inflate(inflater, container, false);
             View view = binding.getRoot();
 
-            RecyclerView recyclerView = binding.AttendenceRecords;
-            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-            adapterAttendance = new AttendanceAdapter(attendanceList);
-            recyclerView.setAdapter(adapterAttendance);
-
-            fetchDataFromAPI();
 
             AutoCompleteTextView autoCompleteTextView = binding.AutoCompleteTextViewMonths;
             ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), R.layout.list_items, months);
@@ -67,6 +69,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
                 SelectedMonth = monthItem;
                 filterDataByMonthAndYear();
             });
+
+            TOKEN = getUserToken();
 
             AutoCompleteTextView autoCompleteTextViewYear = binding.AutoCompleteTextViewYears;
             int currentYear = Calendar.getInstance().get(Calendar.YEAR);
@@ -84,8 +88,21 @@ import retrofit2.converter.gson.GsonConverterFactory;
                 filterDataByMonthAndYear();
             });
 
+
+            fetchDataFromAPI();
+
+
+            RecyclerView recyclerView = binding.AttendenceRecords;
+            recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+            adapterAttendance = new AttendanceAdapter(attendanceList);
+            recyclerView.setAdapter(adapterAttendance);
+
+
+
             return view;
         }
+
+
 
         @Override
         public void onAttach(@NonNull Context context) {
@@ -120,12 +137,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
             call = apiService.getAttendances("Bearer " + token);
 
             call.enqueue(new Callback<List<AttendanceData>>() {
+                @SuppressLint("NotifyDataSetChanged")
                 @Override
                 public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
+                    System.out.println("asddfsd: " + response.body().toString());
                     if (response.isSuccessful() && response.body() != null) {
-
-                        attendanceList.clear();
-                        attendanceList.addAll(response.body());
+                        attendanceList = response.body();
+                        adapterAttendance = new AttendanceAdapter(attendanceList);
+                        binding.AttendenceRecords.setAdapter(adapterAttendance);
                         adapterAttendance.notifyDataSetChanged();
                     } else {
                         Toast.makeText(requireContext(), "Failed to fetch attendance data", Toast.LENGTH_SHORT).show();
@@ -134,7 +153,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
                 @Override
                 public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
-                    if (requireContext() != null) {
+                    // Check if the fragment is attached to a context
+                    if (isAdded() && requireContext() != null) {
                         Toast.makeText(requireContext(), "Failed to fetch attendance data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                     } else {
                         // Log the error or handle it accordingly
@@ -149,9 +169,10 @@ import retrofit2.converter.gson.GsonConverterFactory;
             for (AttendanceData data : attendanceList) {
                 if (matchesSelectedMonthAndYear(data)) {
                     filteredList.add(data);
+
                 }
             }
-            adapterAttendance.setData(filteredList);
+            //adapterAttendance.setData(filteredList);
         }
 
         private boolean matchesSelectedMonthAndYear(AttendanceData data) {

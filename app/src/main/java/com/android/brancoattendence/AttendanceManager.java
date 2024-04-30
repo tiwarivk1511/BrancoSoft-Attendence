@@ -29,10 +29,10 @@ public class AttendanceManager {
         String currentTime = sdf.format(new Date());
 
         // Call checkIn API
-        Call<AttendanceResponse> call = mApiService.checkIn(token, currentTime);
-        call.enqueue(new Callback<AttendanceResponse>() {
+        Call<AttendanceData> call = mApiService.checkIn(token, currentTime);
+        call.enqueue(new Callback<AttendanceData>() {
             @Override
-            public void onResponse(Call<AttendanceResponse> call, Response<AttendanceResponse> response) {
+            public void onResponse(Call<AttendanceData> call, Response<AttendanceData> response) {
                 if (response.isSuccessful() && response.body() != null) {
 
                     Toast.makeText(mContext, "Check-in successful", Toast.LENGTH_SHORT).show();
@@ -42,7 +42,7 @@ public class AttendanceManager {
             }
 
             @Override
-            public void onFailure(Call<AttendanceResponse> call, Throwable t) {
+            public void onFailure(Call<AttendanceData> call, Throwable t) {
                 Toast.makeText(mContext, "Failed to check-in", Toast.LENGTH_SHORT).show();
             }
         });

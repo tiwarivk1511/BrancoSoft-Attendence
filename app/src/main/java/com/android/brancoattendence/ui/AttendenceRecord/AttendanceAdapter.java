@@ -1,5 +1,6 @@
 package com.android.brancoattendence.ui.AttendenceRecord;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.brancoattendence.AttendanceData;
 import com.android.brancoattendence.R;
 
+import java.sql.Time;
 import java.util.List;
 
 public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.AttendanceViewHolder> {
@@ -21,11 +23,7 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.At
         this.attendanceList = attendanceList;
     }
 
-    // Define a method to update the list of attendance data
-    public void setData(List<AttendanceData> newData) {
-        attendanceList = newData;
-        notifyDataSetChanged(); // Notify RecyclerView that the data has changed
-    }
+
 
     // ViewHolder class to hold the views of each item
     public static class AttendanceViewHolder extends RecyclerView.ViewHolder {
@@ -54,21 +52,23 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.At
         // Get the AttendanceData object at the specified position
         AttendanceData attendanceData = attendanceList.get(position);
 
-        // Set the data to the views
+        Log.d("asddfsd", ""+ attendanceData.getCheckIn());
+
+        // Set the date to the date TextView
         holder.dateTextView.setText(attendanceData.getDate());
 
-        // Check if check-in time is available
-        if (attendanceData.getCheckIn() != null && !attendanceData.getCheckIn().isEmpty()) {
-            holder.checkInTextView.setText("Check-in: " + attendanceData.getCheckIn());
+        // Set the check-in time to the check-in TextView
+        if (attendanceData.getCheckIn() != null ) {
+            holder.checkInTextView.setText("In: " + attendanceData.getCheckIn());
         } else {
-            holder.checkInTextView.setText("Check-in: N/A");
+            holder.checkInTextView.setText("In: --:--");
         }
 
-        // Check if check-out time is available
-        if (attendanceData.getCheckOut() != null && !attendanceData.getCheckOut().isEmpty()) {
-            holder.checkOutTextView.setText("Check-out: " + attendanceData.getCheckOut());
+        // Set the check-out time to the check-out TextView
+        if (attendanceData.getCheckOut() != null) {
+            holder.checkOutTextView.setText("Out: " + attendanceData.getCheckOut());
         } else {
-            holder.checkOutTextView.setText("Check-out: N/A");
+            holder.checkOutTextView.setText("Out: --:--");
         }
     }
 

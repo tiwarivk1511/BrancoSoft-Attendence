@@ -60,10 +60,10 @@ public interface ApiService {
     Call<List<AttendanceData>> getAttendances(@Header("Authorization") String token);
 
     @POST("attendances")
-    Call<AttendanceResponse> checkIn(@Header("Authorization") String token, @Query("check_in") String checkInTime);
+    Call<AttendanceData> checkIn(@Header("Authorization") String token, @Query("check_in") String checkInTime);
 
     @POST("attendances/{checkInId}")
-    Call<AttendanceResponse> checkOut(
+    Call<AttendanceData> checkOut(
             @Header("Authorization") String token,
             @Path("checkInId") int checkInId,
             @Query("check_out") String checkOutTime

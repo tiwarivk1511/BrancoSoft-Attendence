@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 public class AttendanceData {
 
     @SerializedName("attd_id")
-    private static int attendanceId;
+    private int attendanceId;
 
     @SerializedName("emp_id")
     private int employeeId;
@@ -14,19 +14,12 @@ public class AttendanceData {
     private String date;
 
     @SerializedName("check_in")
-    private static String checkIn;
+    private  String checkIn;
 
     @SerializedName("check_out")
     private static String checkOut;
 
-    @SerializedName("location")
-    private String location;
-
-
-
-
-    // Add getters and setters
-    public static int getAttendanceId() {
+    public  int getAttendanceId() {
         return attendanceId;
     }
 
@@ -50,27 +43,19 @@ public class AttendanceData {
         this.date = date;
     }
 
-    public static String getCheckIn() {
+    public  String getCheckIn() {
         return checkIn;
     }
 
-    public void setCheckIn(String checkIn) {
-       this.checkIn = checkIn;
+    public  void setCheckIn(String checkIn) {
+        this.checkIn = checkIn;
     }
 
-    public static String getCheckOut() {
+    public  String getCheckOut() {
         return checkOut;
     }
 
-    public void setCheckOut(String checkOut) {
+    public  void setCheckOut(String checkOut) {
         this.checkOut = checkOut;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
     }
 }

@@ -142,11 +142,10 @@ public class HomeActivity extends AppCompatActivity {
         return preferences.getString("token", null);
     }
 
-    private void performCheckIn() {
+    private void performCheckIn(String time) {
         String baseUrl = HostURL.getBaseUrl(); // Update base URL
         String token = retrieveTokenFromSharedPreferences();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String currentTime = sdf.format(new Date());
+        String currentTime = time;
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
@@ -154,10 +153,10 @@ public class HomeActivity extends AppCompatActivity {
                 .build();
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<AttendanceResponse> call = apiService.checkIn("Bearer " + token, currentTime);
-        call.enqueue(new Callback<AttendanceResponse>() {
+        Call<AttendanceData> call = apiService.checkIn("Bearer " + token, currentTime);
+        call.enqueue(new Callback<AttendanceData>() {
             @Override
-            public void onResponse(@NonNull Call<AttendanceResponse> call, @NonNull Response<AttendanceResponse> response) {
+            public void onResponse(@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     System.out.println("Check-in API response: " + response.body());
                     Toast.makeText(HomeActivity.this, "Check-in successful", Toast.LENGTH_SHORT).show();
@@ -167,7 +166,7 @@ public class HomeActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(@NonNull Call<AttendanceResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<AttendanceData> call, Throwable t) {
                 Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
             }
         });
@@ -186,10 +185,10 @@ public class HomeActivity extends AppCompatActivity {
                 .build();
         ApiService apiService = retrofit.create(ApiService.class);
 
-        Call<AttendanceResponse> call = apiService.checkOut("Bearer " + token, attendanceId, currentTime);
-        call.enqueue(new Callback<AttendanceResponse>() {
+        Call<AttendanceData> call = apiService.checkOut("Bearer " + token, attendanceId, currentTime);
+        call.enqueue(new Callback<AttendanceData>() {
             @Override
-            public void onResponse(@NonNull Call<AttendanceResponse> call, @NonNull Response<AttendanceResponse> response) {
+            public void onResponse(@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     System.out.println("Check-out API response: " + response.body());
                     Toast.makeText(HomeActivity.this, "Check-out successful", Toast.LENGTH_SHORT).show();
@@ -199,7 +198,7 @@ public class HomeActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(@NonNull Call<AttendanceResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<AttendanceData> call, Throwable t) {
                 Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
             }
         });
@@ -284,23 +283,17 @@ public class HomeActivity extends AppCompatActivity {
         String time = new SimpleDateFormat("hh:mm", Locale.getDefault()).format(currentDate);
 
         if (isWithinRange) {
-            AttendanceData data = new AttendanceData();
-            data.setEmployeeId(UserDataResponse.getEmployeeId());
-            data.setDate(date);
-            data.setCheckIn(time);
-            data.setLocation(address);
-
-            performCheckIn();
+            performCheckIn(time);
         }  else {// Handle when user is not within range
 
-            String attendanceID = AttendanceResponse.getId();
+            /*String attendanceID = String.valueOf(AttendanceData.getAttendanceId());
             if (attendanceID != null) {
                 performCheckOut(Integer.parseInt(attendanceID));
             } else {
                 // Handle the case where attendanceID is null
                 // For example, show an error message or perform some other action
                 Toast.makeText(HomeActivity.this, "Attendance ID is null", Toast.LENGTH_SHORT).show();
-            }
+            }*/
             Toast.makeText(this, "You are not within range", Toast.LENGTH_SHORT).show();
         }
 

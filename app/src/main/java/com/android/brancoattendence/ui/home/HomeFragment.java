@@ -67,8 +67,8 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         recyclerViewDates.setAdapter(adapter);
         adapter.highlightTodayAndScroll(recyclerViewDates);
 
-        binding.checkInTime.setText(AttendanceData.getCheckIn());
-        binding.checkOutTime.setText(AttendanceData.getCheckOut());
+        /*binding.checkInTime.setText(String.valueOf(AttendanceData.getCheckIn()));
+        binding.checkOutTime.setText(String.valueOf(AttendanceData.getCheckOut()));*/
 
         // Load weekly attendance records
         RecyclerView recyclerViewAttendance = binding.WeeklyAttendanceRecords;
