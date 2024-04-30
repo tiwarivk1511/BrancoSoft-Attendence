@@ -33,7 +33,9 @@ import com.android.brancoattendence.databinding.FragmentHomeBinding;
 import com.android.brancoattendence.ui.profile.UserDataResponse;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -67,8 +69,10 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         recyclerViewDates.setAdapter(adapter);
         adapter.highlightTodayAndScroll(recyclerViewDates);
 
-        /*binding.checkInTime.setText(String.valueOf(AttendanceData.getCheckIn()));
-        binding.checkOutTime.setText(String.valueOf(AttendanceData.getCheckOut()));*/
+
+
+        binding.checkInTime.setText("");
+        binding.checkOutTime.setText("");
 
         // Load weekly attendance records
         RecyclerView recyclerViewAttendance = binding.WeeklyAttendanceRecords;
@@ -89,41 +93,64 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         );
         highlightTodayAndScroll(binding.ViewDates,dates);
 
+
+
+        //get the current week number
+        if (android.os.Build.VERSION.SDK_INT >= 26) {
+            int currentWeekNumber = LocalDate.now().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+            fetchWeeklyAttendanceRecords(currentWeekNumber);
+        }
+
         return root;
     }
 
-    // Method to get the current location of the User
-    private void getCurrentLocation() {
-        // Check if the app has permission to access fine location
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-                checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Request permission to access fine location
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        } else {
-            // Permission already granted, proceed to get the current location
-            // Your code to get the current location goes here
-            LocationManager locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
-            if (locationManager != null) {
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                if (location != null) {
-                    // Location found, do something with it
-                    // Your code to handle the location goes here
-                    String address = String.format(
-                            "%s, %s",
-                            location.getLatitude(),
-                            location.getLongitude()
-                    );
+    private void fetchWeeklyAttendanceRecords(int currentWeekNumber) {
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(HostURL.getBaseUrl())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        ApiService apiService = retrofit.create(ApiService.class);
 
 
-
-                } else {
-                    // Location not found, handle accordingly
-                    // Your code to handle the location not found goes here
-                }
-            }
-
-        }
     }
+
+    // Method to get the current location of the User
+//    private void getCurrentLocation() {
+//        // Check if the app has permission to access fine location
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+//                checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            // Request permission to access fine location
+//            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+//        } else {
+//            // Permission already granted, proceed to get the current location
+//            // Your code to get the current location goes here
+//            LocationManager locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
+//            if (locationManager != null) {
+//                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+//                if (location != null) {
+//                    // Location found, do something with it
+//                    // Your code to handle the location goes here
+//                    String address = String.format(
+//                            "%s, %s",
+//                            location.getLatitude(),
+//                            location.getLongitude()
+//                    );
+//
+//
+//                    System.out.println("Address: " + address);
+//
+//                } else {
+//                    // Location not found, handle accordingly
+//                    // Your code to handle the location not found goes here
+//                }
+//            }
+//
+//        }
+//    }
+
+
 
     // Override onRequestPermissionsResult to handle the result of the permission request
     @Override

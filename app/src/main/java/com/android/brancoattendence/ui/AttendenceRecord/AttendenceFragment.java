@@ -23,6 +23,8 @@ import com.android.brancoattendence.HostURL;
 import com.android.brancoattendence.R;
 import com.android.brancoattendence.databinding.FragmentAttendenceBinding;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -67,7 +69,11 @@ import retrofit2.converter.gson.GsonConverterFactory;
                 String monthItem = parent.getItemAtPosition(position).toString();
                 Toast.makeText(requireContext(), "Selected: " + monthItem, Toast.LENGTH_SHORT).show();
                 SelectedMonth = monthItem;
-                filterDataByMonthAndYear();
+                try {
+                    filterDataByMonthAndYear();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             });
 
             TOKEN = getUserToken();
@@ -85,12 +91,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
                 String yearItem = parent.getItemAtPosition(position).toString();
                 Toast.makeText(requireContext(), "Selected: " + yearItem, Toast.LENGTH_SHORT).show();
                 Year = yearItem;
-                filterDataByMonthAndYear();
+                try {
+                    filterDataByMonthAndYear();
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             });
 
-
             fetchDataFromAPI();
-
 
             RecyclerView recyclerView = binding.AttendenceRecords;
             recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -98,9 +106,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
             recyclerView.setAdapter(adapterAttendance);
 
 
-
             return view;
         }
+
 
 
 
@@ -164,28 +172,34 @@ import retrofit2.converter.gson.GsonConverterFactory;
             });
         }
 
-        private void filterDataByMonthAndYear() {
+
+        private void filterDataByMonthAndYear() throws ParseException {
             List<AttendanceData> filteredList = new ArrayList<>();
             for (AttendanceData data : attendanceList) {
                 if (matchesSelectedMonthAndYear(data)) {
                     filteredList.add(data);
-
                 }
             }
-            //adapterAttendance.setData(filteredList);
+            adapterAttendance = new AttendanceAdapter(filteredList);
+            binding.AttendenceRecords.setAdapter(adapterAttendance);
+            adapterAttendance.notifyDataSetChanged();
         }
 
-        private boolean matchesSelectedMonthAndYear(AttendanceData data) {
+        private boolean matchesSelectedMonthAndYear(AttendanceData data) throws ParseException {
             if (SelectedMonth == null || Year == null) {
-                return true;
+                return true; // Return true if month or year is not selected
             }
 
+            // Extract month and year from the attendance data
             Calendar cal = Calendar.getInstance();
-            int dataMonth = cal.get(Calendar.MONTH) + 1;
+            cal.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(data.getDate()));
+            int dataMonth = cal.get(Calendar.MONTH); // Month starts from 0, so no need to add 1
             int dataYear = cal.get(Calendar.YEAR);
 
-            return months[dataMonth - 1].equalsIgnoreCase(SelectedMonth) && Year.equals(String.valueOf(dataYear));
+            // Check if the data matches the selected month and year
+            return months[dataMonth].equalsIgnoreCase(SelectedMonth) && Year.equals(String.valueOf(dataYear));
         }
+
 
         private String getUserToken() {
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
