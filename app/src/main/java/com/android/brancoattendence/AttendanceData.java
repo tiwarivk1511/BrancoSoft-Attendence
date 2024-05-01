@@ -19,7 +19,7 @@ public class AttendanceData {
     @SerializedName("check_out")
     private static String checkOut;
 
-    public  int getAttendanceId() {
+    public int getAttendanceId() {
         return attendanceId;
     }
 

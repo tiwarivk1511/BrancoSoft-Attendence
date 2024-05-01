@@ -30,8 +30,11 @@ import com.android.brancoattendence.DateAdapter;
 import com.android.brancoattendence.HostURL;
 import com.android.brancoattendence.R;
 import com.android.brancoattendence.databinding.FragmentHomeBinding;
+import com.android.brancoattendence.ui.AttendenceRecord.AttendanceAdapter;
 import com.android.brancoattendence.ui.profile.UserDataResponse;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -51,12 +54,17 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
     private FragmentHomeBinding binding;
     private static final String LOCATION_WORK_TAG = "location_work";
+    private List<AttendanceData> attendanceList = new ArrayList<>();
+    private AttendanceAdapter adapterAttendance;
+    private String Year;
+
+    private String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
-
+        Year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
         // Load dates for current month
         RecyclerView recyclerViewDates = binding.ViewDates;
         recyclerViewDates.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
@@ -69,10 +77,12 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         recyclerViewDates.setAdapter(adapter);
         adapter.highlightTodayAndScroll(recyclerViewDates);
 
+        AttendanceData attendanceData = new AttendanceData();
+        String checkIn = attendanceData.getCheckIn();
+        String checkOut = attendanceData.getCheckOut();
 
-
-        binding.checkInTime.setText("");
-        binding.checkOutTime.setText("");
+        binding.checkInTime.setText(checkIn);
+        binding.checkOutTime.setText(checkOut);
 
         // Load weekly attendance records
         RecyclerView recyclerViewAttendance = binding.WeeklyAttendanceRecords;
@@ -84,6 +94,18 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         // Fetch user profile data for current user's name
         fetchUserData();
 
+        fetchDataFromAPI();
+
+        RecyclerView recyclerView = binding.WeeklyAttendanceRecords;
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        adapterAttendance = new AttendanceAdapter(attendanceList);
+        recyclerView.setAdapter(adapterAttendance);
+
+        try {
+            filterDataByMonthAndYear();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         //navigate to view all attendance
         binding.viewAllAttendeceTxt.setOnClickListener(
                 v -> {
@@ -93,28 +115,54 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         );
         highlightTodayAndScroll(binding.ViewDates,dates);
 
-
-
-        //get the current week number
-        if (android.os.Build.VERSION.SDK_INT >= 26) {
-            int currentWeekNumber = LocalDate.now().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-            fetchWeeklyAttendanceRecords(currentWeekNumber);
-        }
-
         return root;
     }
 
-    private void fetchWeeklyAttendanceRecords(int currentWeekNumber) {
+    // Fetch user profile data
+    private void fetchUserData() {
+        // Retrieve token from SharedPreferences
+        String token = retrieveTokenFromSharedPreferences();
+        System.out.println("Token: " + token);
 
+        System.out.println("Token: " + token);
+        // Check if token is null
+        if (token == null) {
+            // Handle null token
+            Toast.makeText(getContext(), "Token is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Setup Retrofit
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(HostURL.getBaseUrl())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
+        // Create ApiService instance
         ApiService apiService = retrofit.create(ApiService.class);
 
+        // Make API call to fetch user data with Authorization header
+        Call<UserDataResponse> call = apiService.getUserData("Bearer " + token);
+
+        call.enqueue(new Callback<UserDataResponse>() {
+            @Override
+            public void onResponse(Call<UserDataResponse> call, Response<UserDataResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // Update UI with user data
+                    updateUI(response.body());
+                } else {
+                    Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserDataResponse> call, Throwable t) {
+                Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
+
 
     // Method to get the current location of the User
 //    private void getCurrentLocation() {
@@ -167,50 +215,80 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         }
     }
     // Fetch user profile data
-    private void fetchUserData() {
-        // Retrieve token from SharedPreferences
+    private void fetchDataFromAPI() {
         String token = retrieveTokenFromSharedPreferences();
-        System.out.println("Token: " + token);
-
-        System.out.println("Token: " + token);
-        // Check if token is null
-        if (token == null) {
-            // Handle null token
-            Toast.makeText(getContext(), "Token is null", Toast.LENGTH_SHORT).show();
+        if (token.isEmpty()) {
+            Toast.makeText(requireContext(), "User token not found", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Setup Retrofit
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(HostURL.getBaseUrl())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        // Create ApiService instance
         ApiService apiService = retrofit.create(ApiService.class);
 
-        // Make API call to fetch user data with Authorization header
-        Call<UserDataResponse> call = apiService.getUserData("Bearer " + token);
+        Call<List<AttendanceData>> call = apiService.getAttendances("Bearer " + token);
 
-        call.enqueue(new Callback<UserDataResponse>() {
+        call.enqueue(new Callback<List<AttendanceData>>() {
+            @SuppressLint("NotifyDataSetChanged")
             @Override
-            public void onResponse(Call<UserDataResponse> call, Response<UserDataResponse> response) {
+            public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
+                System.out.println("asddfsd: " + response.body().toString());
                 if (response.isSuccessful() && response.body() != null) {
-                    // Update UI with user data
-                    updateUI(response.body());
+                    attendanceList = response.body();
+                    adapterAttendance = new AttendanceAdapter(attendanceList);
+                    binding.WeeklyAttendanceRecords.setAdapter(adapterAttendance);
+                    adapterAttendance.notifyDataSetChanged();
                 } else {
-                    Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Failed to fetch attendance data", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<UserDataResponse> call, Throwable t) {
-                Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
+                // Check if the fragment is attached to a context
+                if (isAdded() && requireContext() != null) {
+                    Toast.makeText(requireContext(), "Failed to fetch attendance data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    // Log the error or handle it accordingly
+                }
             }
-        });
 
+        });
     }
 
+
+    private void filterDataByMonthAndYear() throws ParseException {
+        List<AttendanceData> filteredList = new ArrayList<>();
+        for (AttendanceData data : attendanceList) {
+            if (matchesSelectedMonthAndYear(data)) {
+                filteredList.add(data);
+            }
+        }
+        adapterAttendance = new AttendanceAdapter(filteredList);
+        binding.WeeklyAttendanceRecords.setAdapter(adapterAttendance);
+        adapterAttendance.notifyDataSetChanged();
+    }
+
+    private boolean matchesSelectedMonthAndYear(AttendanceData data) throws ParseException {
+
+        // Extract month and year from the attendance data
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(data.getDate()));
+        //get current month and year
+        int currentMonth = cal.get(Calendar.MONTH); // Month starts from 0, so no need to add 1
+        int currentYear = cal.get(Calendar.YEAR);
+       
+
+        // Check if the data matches the selected month and year
+
+        return months[currentMonth].equalsIgnoreCase(String.valueOf(currentMonth)) && Year.equals(String.valueOf(currentYear));
+    }
+
+    
+    
     private String retrieveTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
         String token = preferences.getString("token", null);
@@ -229,7 +307,7 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
         String FullName = userData.getFirstName() +MiddName+ " " + userData.getLastName();
         // Update UI with user data
-        binding.greeting.setText("Welcome \uD83D\uDC4B!" +"\n"+ FullName);
+        binding.greeting.setText("Welcome \uD83D\uDC4B! " + FullName);
     }
     private List<DayOfWeek> getDaysOfWeekForDates(List<Date> dates) {
         List<DayOfWeek> dayOfWeeks = new ArrayList<>();

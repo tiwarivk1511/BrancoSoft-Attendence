@@ -1,5 +1,6 @@
 package com.android.brancoattendence.ui.AttendenceRecord;
 
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,8 @@ import com.android.brancoattendence.AttendanceData;
 import com.android.brancoattendence.R;
 
 import java.sql.Time;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.AttendanceViewHolder> {
@@ -52,13 +55,17 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.At
         // Get the AttendanceData object at the specified position
         AttendanceData attendanceData = attendanceList.get(position);
 
-        Log.d("asddfsd", ""+ attendanceData.getCheckIn());
 
+//        Log.d("asddfsd", "Attendance Id: " + attendanceData.getAttendanceId());
+//
+//        Log.d("asddfsd", "Check In: " + attendanceData.getCheckIn());
+//
+//        Log.d("asddfsd", "Check Out: " + attendanceData.getCheckOut());
         // Set the date to the date TextView
-        holder.dateTextView.setText(attendanceData.getDate());
+        holder.dateTextView.setText("Date: " + attendanceData.getDate());
 
         // Set the check-in time to the check-in TextView
-        if (attendanceData.getCheckIn() != null ) {
+        if (attendanceData.getCheckIn() != null) {
             holder.checkInTextView.setText("In: " + attendanceData.getCheckIn());
         } else {
             holder.checkInTextView.setText("In: --:--");

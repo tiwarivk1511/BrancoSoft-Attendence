@@ -48,9 +48,9 @@ public class HomeActivity extends AppCompatActivity {
     private ActivityHomeBinding binding;
     private AttendanceManager mAttendanceManager;
 
-    private String address = "";
-    private double latitude;
-    private double longitude;
+//    private String address = "";
+//    private double latitude;
+//    private double longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,7 +95,11 @@ public class HomeActivity extends AppCompatActivity {
             return true;
         });
 
-        fetchCurrentLocation();
+        //initialize the BroadcastReceiver here
+        LocationBroadcastReceiver locationBroadcastReceiver = new LocationBroadcastReceiver();
+        locationBroadcastReceiver.turnOnWorkManager(this.getApplicationContext());
+
+        // Set portrait orientation
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         Window window = getWindow();
@@ -142,67 +146,6 @@ public class HomeActivity extends AppCompatActivity {
         return preferences.getString("token", null);
     }
 
-    private void performCheckIn(String time) {
-        String baseUrl = HostURL.getBaseUrl(); // Update base URL
-        String token = retrieveTokenFromSharedPreferences();
-        String currentTime = time;
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        ApiService apiService = retrofit.create(ApiService.class);
-
-        Call<AttendanceData> call = apiService.checkIn("Bearer " + token, currentTime);
-        call.enqueue(new Callback<AttendanceData>() {
-            @Override
-            public void onResponse(@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    System.out.println("Check-in API response: " + response.body());
-                    Toast.makeText(HomeActivity.this, "Check-in successful", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<AttendanceData> call, Throwable t) {
-                Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-
-    private void performCheckOut(int attendanceId) {
-        String baseUrl = HostURL.getBaseUrl(); // Update base URL
-        String token = retrieveTokenFromSharedPreferences();
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
-        String currentTime = sdf.format(new Date());
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-        ApiService apiService = retrofit.create(ApiService.class);
-
-        Call<AttendanceData> call = apiService.checkOut("Bearer " + token, attendanceId, currentTime);
-        call.enqueue(new Callback<AttendanceData>() {
-            @Override
-            public void onResponse(@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    System.out.println("Check-out API response: " + response.body());
-                    Toast.makeText(HomeActivity.this, "Check-out successful", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<AttendanceData> call, Throwable t) {
-                Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
 
     private void clearTokenFromSharedPreferences() {
@@ -219,105 +162,161 @@ public class HomeActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    private void fetchCurrentLocation() {
-        if (isUserLoggedIn()) {
-            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // Request permissions here if not granted
-            }
-
-            FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
-
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(location -> {
-                        if (location != null) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-
-                            new GetAddressTask().execute(latitude, longitude);
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    });
-
-        } else {
-            Toast.makeText(this, "Login First", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private class GetAddressTask extends AsyncTask<Double, Void, String> {
-        @Override
-        protected String doInBackground(Double... params) {
-            double latitude = params[0];
-            double longitude = params[1];
-            return getAddressFromCoordinates(latitude, longitude);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            address = result;
-            markAttendance(isWithinCoordinatesRange(latitude, longitude));
-        }
-    }
-
-    private String getAddressFromCoordinates(double latitude, double longitude) {
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        String currentAddress = "";
-        try {
-            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-            if (!addresses.isEmpty()) {
-                currentAddress = addresses.get(0).getAddressLine(0);
-                System.out.println("Address: " + currentAddress);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return currentAddress;
-    }
-
-    private void markAttendance(boolean isWithinRange) {
-        Date currentDate = new Date();
-        String date = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(currentDate);
-        String time = new SimpleDateFormat("hh:mm", Locale.getDefault()).format(currentDate);
-
-        if (isWithinRange) {
-            performCheckIn(time);
-        }  else {// Handle when user is not within range
-
-            /*String attendanceID = String.valueOf(AttendanceData.getAttendanceId());
-            if (attendanceID != null) {
-                performCheckOut(Integer.parseInt(attendanceID));
-            } else {
-                // Handle the case where attendanceID is null
-                // For example, show an error message or perform some other action
-                Toast.makeText(HomeActivity.this, "Attendance ID is null", Toast.LENGTH_SHORT).show();
-            }*/
-            Toast.makeText(this, "You are not within range", Toast.LENGTH_SHORT).show();
-        }
-
-    }
-
-    private boolean isUserLoggedIn() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String token = preferences.getString("token", null);
-        return token != null;
-    }
-
-    private boolean isWithinCoordinatesRange(double latitude, double longitude) {
-        double officeLatitude = 28.6188512;
-        double officeLongitude = 77.3911159;
-        double earthRadius = 6371;
-        double latDistance = Math.toRadians(officeLatitude - latitude);
-        double lonDistance = Math.toRadians(officeLongitude - longitude);
-        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
-                + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(officeLatitude))
-                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = earthRadius * c * 1000; // Convert distance to meters
-
-        return distance <= 25; // Check if distance is less than or equal to 5 meters
-    }
+//    private void fetchCurrentLocation() {
+//        if (isUserLoggedIn()) {
+//            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+//                    ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                // Request permissions here if not granted
+//            }
+//
+//            FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
+//
+//            fusedLocationClient.getLastLocation()
+//                    .addOnSuccessListener(location -> {
+//                        if (location != null) {
+//                            latitude = location.getLatitude();
+//                            longitude = location.getLongitude();
+//
+//                            new GetAddressTask().execute(latitude, longitude);
+//                        }
+//                    })
+//                    .addOnFailureListener(e -> {
+//                        Toast.makeText(this, "Failed to get location", Toast.LENGTH_SHORT).show();
+//                        e.printStackTrace();
+//                    });
+//
+//        } else {
+//            Toast.makeText(this, "Login First", Toast.LENGTH_SHORT).show();
+//        }
+//    }
+//
+//    private class GetAddressTask extends AsyncTask<Double, Void, String> {
+//        @Override
+//        protected String doInBackground(Double... params) {
+//            double latitude = params[0];
+//            double longitude = params[1];
+//            return getAddressFromCoordinates(latitude, longitude);
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            address = result;
+//            markAttendance(isWithinCoordinatesRange(latitude, longitude));
+//        }
+//    }
+//
+//    private String getAddressFromCoordinates(double latitude, double longitude) {
+//        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+//        String currentAddress = "";
+//        try {
+//            List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
+//            if (!addresses.isEmpty()) {
+//                currentAddress = addresses.get(0).getAddressLine(0);
+//                System.out.println("Address: " + currentAddress);
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return currentAddress;
+//    }
+//
+//    private void markAttendance(boolean isWithinRange) {
+//        Date currentDate = new Date();
+//        String date = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault()).format(currentDate);
+//        String time = new SimpleDateFormat("hh:mm", Locale.getDefault()).format(currentDate);
+//
+//        if (isWithinRange) {
+//            performCheckIn(time);
+//        }  else {// Handle when user is not within range
+//            AttendanceData attendanceData = new AttendanceData();
+//            int attendanceID = attendanceData.getAttendanceId();
+//           performCheckOut(attendanceID);
+//            Toast.makeText(this, "You are not within range", Toast.LENGTH_SHORT).show();
+//        }
+//
+//    }
+//
+//    private void performCheckIn(String time) {
+//        String baseUrl = HostURL.getBaseUrl(); // Update base URL
+//        String token = retrieveTokenFromSharedPreferences();
+//        String currentTime = time;
+//
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl(baseUrl)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//        ApiService apiService = retrofit.create(ApiService.class);
+//
+//        Call<AttendanceData> call = apiService.checkIn("Bearer " + token, currentTime);
+//        call.enqueue(new Callback<AttendanceData>() {
+//            @Override
+//            public void onResponse(@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
+//                if (response.isSuccessful() && response.body() != null) {
+//                    System.out.println("Check-in API response: " + response.body());
+//                    Toast.makeText(HomeActivity.this, "Check-in successful", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<AttendanceData> call, Throwable t) {
+//                Toast.makeText(HomeActivity.this, "Failed to check-in", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+//
+//
+//    private void performCheckOut(int attendanceId) {
+//        String baseUrl = HostURL.getBaseUrl(); // Update base URL
+//        String token = retrieveTokenFromSharedPreferences();
+//        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+//        String currentTime = sdf.format(new Date());
+//
+//        Retrofit retrofit = new Retrofit.Builder()
+//                .baseUrl(baseUrl)
+//                .addConverterFactory(GsonConverterFactory.create())
+//                .build();
+//        ApiService apiService = retrofit.create(ApiService.class);
+//
+//        Call<AttendanceData> call = apiService.checkOut("Bearer " + token, attendanceId, currentTime);
+//        call.enqueue(new Callback<AttendanceData>() {
+//            @Override
+//            public void onResponse(@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
+//                if (response.isSuccessful() && response.body() != null) {
+//                    System.out.println("Check-out API response: " + response.body());
+//                    Toast.makeText(HomeActivity.this, "Check-out successful", Toast.LENGTH_SHORT).show();
+//                } else {
+//                    Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(@NonNull Call<AttendanceData> call, Throwable t) {
+//                Toast.makeText(HomeActivity.this, "Failed to check-out", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//    }
+//
+//    private boolean isUserLoggedIn() {
+//        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+//        String token = preferences.getString("token", null);
+//        return token != null;
+//    }
+//
+//    private boolean isWithinCoordinatesRange(double latitude, double longitude) {
+//        double officeLatitude = 28.6188512;
+//        double officeLongitude = 77.3911159;
+//        double earthRadius = 6371;
+//        double latDistance = Math.toRadians(officeLatitude - latitude);
+//        double lonDistance = Math.toRadians(officeLongitude - longitude);
+//        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+//                + Math.cos(Math.toRadians(latitude)) * Math.cos(Math.toRadians(officeLatitude))
+//                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+//        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//        double distance = earthRadius * c * 1000; // Convert distance to meters
+//
+//        return distance <= 25; // Check if distance is less than or equal to 5 meters
+//    }
 
 }

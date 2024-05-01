@@ -211,17 +211,20 @@
         app:layout_constraintTop_toBottomOf="@+id/gridLayout" />
 
     <androidx.recyclerview.widget.RecyclerView
-       android:id="@+id/WeeklyAttendanceRecords"
+        android:id="@+id/WeeklyAttendanceRecords"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_marginTop="5dp"
-        android:padding="10dp"
+        android:clipToPadding="false"
+        android:paddingTop="5dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingBottom="5dp"
         tools:listitem="@layout/attendance_layout_tile"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView5" />
-
-
+        app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

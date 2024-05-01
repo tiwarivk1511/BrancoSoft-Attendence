@@ -10,6 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.Body;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
@@ -62,12 +63,9 @@ public interface ApiService {
     @POST("attendances")
     Call<AttendanceData> checkIn(@Header("Authorization") String token, @Query("check_in") String checkInTime);
 
-    @POST("attendances/{checkInId}")
-    Call<AttendanceData> checkOut(
-            @Header("Authorization") String token,
-            @Path("checkInId") int checkInId,
-            @Query("check_out") String checkOutTime
-    );
+    @POST("attendances")
+    Call<AttendanceData> checkOut(@Header("Authorization") String token, @Query("attd_id") int attendanceId, @Query("check_out") String currentTime);
+
 
 
 //    @PUT("attendances/{id}")
