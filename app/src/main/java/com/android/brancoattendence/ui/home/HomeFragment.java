@@ -1,14 +1,7 @@
 package com.android.brancoattendence.ui.home;
 
-import static androidx.core.content.ContextCompat.checkSelfPermission;
-
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -26,6 +19,7 @@ import androidx.work.WorkManager;
 
 import com.android.brancoattendence.ApiService;
 import com.android.brancoattendence.AttendanceData;
+import com.android.brancoattendence.CheckInOutTimeManager;
 import com.android.brancoattendence.DateAdapter;
 import com.android.brancoattendence.HostURL;
 import com.android.brancoattendence.R;
@@ -36,13 +30,12 @@ import com.android.brancoattendence.ui.profile.UserDataResponse;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
-import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -54,101 +47,126 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
     private FragmentHomeBinding binding;
     private static final String LOCATION_WORK_TAG = "location_work";
-    private List<AttendanceData> attendanceList = new ArrayList<>();
+    private static final String LAST_CHECK_IN_TIME_KEY = "last_check_in_time";
+    private static final String LAST_CHECK_OUT_TIME_KEY = "last_check_out_time";
     private AttendanceAdapter adapterAttendance;
-    private String Year;
+    private List<AttendanceData> attendanceList;
 
+    private String Year;
     private String[] months = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
         Year = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+
         // Load dates for current month
         RecyclerView recyclerViewDates = binding.ViewDates;
         recyclerViewDates.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
 
         // Load dates for current month
         List<Date> dates = getDatesForCurrentMonth();
-        assert dates != null;
         List<DayOfWeek> dayOfWeeks = getDaysOfWeekForDates(dates);
-        DateAdapter adapter = new DateAdapter(requireContext(), dates, dayOfWeeks, this);
+        DateAdapter adapter = new DateAdapter(requireContext(), dates, dayOfWeeks);
         recyclerViewDates.setAdapter(adapter);
         adapter.highlightTodayAndScroll(recyclerViewDates);
 
-        AttendanceData attendanceData = new AttendanceData();
-        String checkIn = attendanceData.getCheckIn();
-        String checkOut = attendanceData.getCheckOut();
+        // Initialize the adapterAttendance here
+        adapterAttendance = new AttendanceAdapter(attendanceList);
+//
+//        CheckInOutTimeManager checkInOutTimeManager = new CheckInOutTimeManager();
+//
+//        binding.checkInTime.setText(checkInOutTimeManager.getCheckInTime());
+//
+//        // Retrieve and display check-out time
+//        binding.checkOutTime.setText(checkInOutTimeManager.getCheckOutTime());
 
-        binding.checkInTime.setText(checkIn);
-        binding.checkOutTime.setText(checkOut);
 
         // Load weekly attendance records
         RecyclerView recyclerViewAttendance = binding.WeeklyAttendanceRecords;
         recyclerViewAttendance.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-
-
-
         // Fetch user profile data for current user's name
         fetchUserData();
-
         fetchDataFromAPI();
+        fetchTodayAttendance ();
 
-        RecyclerView recyclerView = binding.WeeklyAttendanceRecords;
-        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapterAttendance = new AttendanceAdapter(attendanceList);
-        recyclerView.setAdapter(adapterAttendance);
-
-        try {
-            filterDataByMonthAndYear();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        //navigate to view all attendance
+        // Navigate to view all attendance
         binding.viewAllAttendeceTxt.setOnClickListener(
-                v -> {
-                    //move to attendance fragment
-                    Navigation.findNavController(requireView()).navigate(R.id.nav_attendance);
-                }
+                v -> Navigation.findNavController(requireView()).navigate(R.id.nav_attendance)
         );
-        highlightTodayAndScroll(binding.ViewDates,dates);
+
+        highlightTodayAndScroll(binding.ViewDates, dates);
 
         return root;
     }
 
+//    private String getCheckIn() {
+//        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+//        String time = preferences.getString(LAST_CHECK_IN_TIME_KEY, "");
+//
+//        return time.isEmpty() ? "--:--" : time;
+//    }
+//
+//    private String getCheckOut() {
+//        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+//        return preferences.getString(LAST_CHECK_OUT_TIME_KEY, "");
+//    }
+
+    //create a method to fetch the data of today's attendance from private List<AttendanceData> attendanceList by searching the date in the list
+    private void fetchTodayAttendance() {
+        if (attendanceList == null) {
+            return;
+        } else {
+            String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+            String firstCheckIn = null;
+            String lastCheckOut = null;
+
+            for (AttendanceData attendance : attendanceList) {
+                if (attendance.getDate().equals(today)) {
+                    // Check if firstCheckIn is null, if so, set it to the current checkIn
+                    if (firstCheckIn == null) {
+                        firstCheckIn = attendance.getCheckIn();
+                    }
+
+                    // Always update lastCheckOut with the current checkOut
+                    lastCheckOut = attendance.getCheckOut();
+                }
+            }
+
+            // Update UI with firstCheckIn and lastCheckOut
+            if (firstCheckIn != null) {
+                binding.checkInTime.setText(firstCheckIn);
+            }
+            if (lastCheckOut != null) {
+                binding.checkOutTime.setText(lastCheckOut);
+            }
+        }
+    }
+
+
     // Fetch user profile data
     private void fetchUserData() {
-        // Retrieve token from SharedPreferences
         String token = retrieveTokenFromSharedPreferences();
-        System.out.println("Token: " + token);
-
-        System.out.println("Token: " + token);
-        // Check if token is null
         if (token == null) {
-            // Handle null token
             Toast.makeText(getContext(), "Token is null", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Setup Retrofit
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(HostURL.getBaseUrl())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        // Create ApiService instance
         ApiService apiService = retrofit.create(ApiService.class);
 
-        // Make API call to fetch user data with Authorization header
         Call<UserDataResponse> call = apiService.getUserData("Bearer " + token);
 
         call.enqueue(new Callback<UserDataResponse>() {
             @Override
             public void onResponse(Call<UserDataResponse> call, Response<UserDataResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // Update UI with user data
                     updateUI(response.body());
                 } else {
                     Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show();
@@ -163,61 +181,10 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
     }
 
-
-    // Method to get the current location of the User
-//    private void getCurrentLocation() {
-//        // Check if the app has permission to access fine location
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
-//                checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            // Request permission to access fine location
-//            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-//        } else {
-//            // Permission already granted, proceed to get the current location
-//            // Your code to get the current location goes here
-//            LocationManager locationManager = (LocationManager) requireContext().getSystemService(Context.LOCATION_SERVICE);
-//            if (locationManager != null) {
-//                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//                if (location != null) {
-//                    // Location found, do something with it
-//                    // Your code to handle the location goes here
-//                    String address = String.format(
-//                            "%s, %s",
-//                            location.getLatitude(),
-//                            location.getLongitude()
-//                    );
-//
-//
-//                    System.out.println("Address: " + address);
-//
-//                } else {
-//                    // Location not found, handle accordingly
-//                    // Your code to handle the location not found goes here
-//                }
-//            }
-//
-//        }
-//    }
-
-
-
-    // Override onRequestPermissionsResult to handle the result of the permission request
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, proceed to get the current location
-                // Your code to get the current location goes here
-            } else {
-                // Permission denied, handle accordingly (e.g., show a message to the user)
-                Toast.makeText(getContext(), "Permission denied to access location", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-    // Fetch user profile data
+    // Fetch data from API
     private void fetchDataFromAPI() {
         String token = retrieveTokenFromSharedPreferences();
-        if (token.isEmpty()) {
+        if (token == null) {
             Toast.makeText(requireContext(), "User token not found", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -235,7 +202,6 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
             @SuppressLint("NotifyDataSetChanged")
             @Override
             public void onResponse(Call<List<AttendanceData>> call, Response<List<AttendanceData>> response) {
-                System.out.println("asddfsd: " + response.body().toString());
                 if (response.isSuccessful() && response.body() != null) {
                     attendanceList = response.body();
                     adapterAttendance = new AttendanceAdapter(attendanceList);
@@ -248,67 +214,25 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
 
             @Override
             public void onFailure(Call<List<AttendanceData>> call, Throwable t) {
-                // Check if the fragment is attached to a context
                 if (isAdded() && requireContext() != null) {
                     Toast.makeText(requireContext(), "Failed to fetch attendance data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                } else {
-                    // Log the error or handle it accordingly
                 }
             }
 
         });
     }
 
-
-    private void filterDataByMonthAndYear() throws ParseException {
-        List<AttendanceData> filteredList = new ArrayList<>();
-        for (AttendanceData data : attendanceList) {
-            if (matchesSelectedMonthAndYear(data)) {
-                filteredList.add(data);
-            }
-        }
-        adapterAttendance = new AttendanceAdapter(filteredList);
-        binding.WeeklyAttendanceRecords.setAdapter(adapterAttendance);
-        adapterAttendance.notifyDataSetChanged();
-    }
-
-    private boolean matchesSelectedMonthAndYear(AttendanceData data) throws ParseException {
-
-        // Extract month and year from the attendance data
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new SimpleDateFormat("yyyy-MM-dd").parse(data.getDate()));
-        //get current month and year
-        int currentMonth = cal.get(Calendar.MONTH); // Month starts from 0, so no need to add 1
-        int currentYear = cal.get(Calendar.YEAR);
-       
-
-        // Check if the data matches the selected month and year
-
-        return months[currentMonth].equalsIgnoreCase(String.valueOf(currentMonth)) && Year.equals(String.valueOf(currentYear));
-    }
-
-    
-    
     private String retrieveTokenFromSharedPreferences() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        String token = preferences.getString("token", null);
-        System.out.println("Token: " + token);
-        return token;
+        return preferences.getString("token", null);
     }
 
     private void updateUI(UserDataResponse userData) {
-        String MiddName = userData.getMiddleName();
-        if (MiddName == null) {
-            MiddName = "";
-        }
-        else {
-            MiddName = " " + MiddName;
-        }
-
-        String FullName = userData.getFirstName() +MiddName+ " " + userData.getLastName();
-        // Update UI with user data
-        binding.greeting.setText("Welcome \uD83D\uDC4B! " + FullName);
+        String middleName = userData.getMiddleName() != null ? " " + userData.getMiddleName() : "";
+        String fullName = userData.getFirstName() + middleName + " " + userData.getLastName();
+        binding.greeting.setText("Welcome \uD83D\uDC4B! " + fullName);
     }
+
     private List<DayOfWeek> getDaysOfWeekForDates(List<Date> dates) {
         List<DayOfWeek> dayOfWeeks = new ArrayList<>();
         for (Date date : dates) {
@@ -318,8 +242,6 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         }
         return dayOfWeeks;
     }
-
-
 
     @SuppressLint("ResourceAsColor")
     private void highlightTodayAndScroll(RecyclerView recyclerView, List<Date> dates) {
@@ -344,7 +266,6 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         }
     }
 
-
     private int getTodayPosition(List<Date> dates) {
         Calendar calToday = Calendar.getInstance();
         for (int i = 0; i < dates.size(); i++) {
@@ -359,21 +280,6 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         return -1;
     }
 
-//    private void updateAddressUI() {
-//        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
-//        String address = sharedPreferences.getString("address", "");
-//        if (!address.isEmpty()) {
-//            Toast.makeText(requireContext(), "Current location: "+address, Toast.LENGTH_SHORT).show();
-//        }
-//    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        WorkManager.getInstance(requireContext()).cancelAllWorkByTag(LOCATION_WORK_TAG);
-        binding = null;
-    }
-
     private List<Date> getDatesForCurrentMonth() {
         List<Date> dates = new ArrayList<>();
         Calendar cal = Calendar.getInstance();
@@ -386,9 +292,15 @@ public class HomeFragment extends Fragment implements DateAdapter.DateClickListe
         return !dates.isEmpty() ? dates : null;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        WorkManager.getInstance(requireContext()).cancelAllWorkByTag(LOCATION_WORK_TAG);
+        binding = null;
+    }
 
     @Override
     public void onDateClick(Date date) {
-
+        // Handle date click event here
     }
 }

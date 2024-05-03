@@ -26,11 +26,11 @@ public class DateAdapter extends RecyclerView.Adapter<DateAdapter.ViewHolder> {
     private Context context;
     private Date selectedDate;
 
-    public DateAdapter(Context context, List<Date> dates, List<DayOfWeek> dayOfWeeks, DateClickListener listener) {
+    public DateAdapter(Context context, List<Date> dates, List<DayOfWeek> dayOfWeeks) {
         this.context = context;
         this.dates = dates;
         this.dayOfWeeks = dayOfWeeks;
-        this.listener = listener;
+
         // Initially set selected date to current date
         this.selectedDate = getTodayDate();
     }

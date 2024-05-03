@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.brancoattendence.AttendanceData;
+import com.android.brancoattendence.CheckInOutTimeManager;
 import com.android.brancoattendence.R;
 
 import java.sql.Time;
@@ -20,6 +21,8 @@ import java.util.List;
 
 public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.AttendanceViewHolder> {
     private List<AttendanceData> attendanceList;
+    String inTime = "";
+    String outTime = "";
 
     // Constructor to initialize the list of attendance data
     public AttendanceAdapter(List<AttendanceData> attendanceList) {
@@ -55,7 +58,12 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.At
         // Get the AttendanceData object at the specified position
         AttendanceData attendanceData = attendanceList.get(position);
 
+        inTime = attendanceData.getCheckIn();
+        outTime = attendanceData.getCheckOut();
 
+//        CheckInOutTimeManager checkInOutTimeManager = new CheckInOutTimeManager();
+//        checkInOutTimeManager.setCheckInTime (inTime);
+//        checkInOutTimeManager.setCheckOutTime (outTime);
 //        Log.d("asddfsd", "Attendance Id: " + attendanceData.getAttendanceId());
 //
 //        Log.d("asddfsd", "Check In: " + attendanceData.getCheckIn());
@@ -85,4 +93,7 @@ public class AttendanceAdapter extends RecyclerView.Adapter<AttendanceAdapter.At
         // Return the size of the attendance list
         return attendanceList.size();
     }
+
+
+
 }

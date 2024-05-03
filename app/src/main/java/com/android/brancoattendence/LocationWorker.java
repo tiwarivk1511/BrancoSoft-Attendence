@@ -145,10 +145,10 @@ public class LocationWorker extends Worker {
     }
 
     private boolean isUserOutOfOffice(double latitude, double longitude) {
-        // Latitude and longitude of the office
 
-        double officeLatitude = 28.61885408667818 /* Your office latitude */;
-        double officeLongitude =  77.39100307286857/* Your office longitude */;
+        // Latitude and longitude of the office
+        double officeLatitude = 28.61885408667818 /*  office latitude */;
+        double officeLongitude =  77.39100307286857/* office longitude */;
 
         // Calculate the distance between user's location and office location
         float[] distance = new float[1];
@@ -157,7 +157,7 @@ public class LocationWorker extends Worker {
         Log.d("asddfsd", "Distance: " + distance[0]);
 
         // If the distance is greater than 500 meters, consider the user out of office
-        return distance[0] > 25;
+        return distance[0] > 25; //distance in meters to indicate the user is out of office
     }
 
     private boolean isCheckInRequired () {
@@ -222,7 +222,7 @@ public class LocationWorker extends Worker {
 
     private void performCheckOut () {
         String currentTime = getCurrentTime ();
-        saveCheckOutTime (currentTime);
+        saveCheckOutTime();
 
         // Check if a recent check-in has been performed
         if (isCheckInPerformed ()) {
@@ -238,12 +238,14 @@ public class LocationWorker extends Worker {
 
             Call<AttendanceData> call = apiService.checkOut ("Bearer " + token, checkingId, currentTime);
 
+            String finalCurrentTime = currentTime;
             call.enqueue (new Callback<AttendanceData> () {
                 @Override
                 public void onResponse (@NonNull Call<AttendanceData> call, @NonNull Response<AttendanceData> response) {
                     if (response.isSuccessful () && response.body () != null) {
                         Log.d (TAG, "Check-out API response: " + response.raw().body ().toString ());
                         Toast.makeText (getApplicationContext (), "Check-out successful", Toast.LENGTH_SHORT).show ();
+                        saveCheckOutTime ();
                         // Generate notification for check-out
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                             generateNotification ("Check-out", "Check-out successful");
@@ -260,9 +262,11 @@ public class LocationWorker extends Worker {
             });
         } else {
             Toast.makeText (getApplicationContext (), "Please perform check-in first", Toast.LENGTH_SHORT).show ();
+            performCheckOut();
         }
         // Make an API call or perform local storage operations to mark check-out
     }
+
 
     @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     private void generateNotification (String title, String message) {
@@ -295,23 +299,24 @@ public class LocationWorker extends Worker {
     private boolean isCheckInPerformed () {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String lastCheckInTime = preferences.getString(LAST_CHECK_IN_TIME_KEY, "");
-        String today = getTodayDateString();
+        String today = getCurrentTime ();
         return !lastCheckInTime.isEmpty() && lastCheckInTime.equals(today);
     }
 
     private void saveCheckInTime(String time) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(LAST_CHECK_IN_TIME_KEY, getTodayDateString());
+        editor.putString(LAST_CHECK_IN_TIME_KEY,getCurrentTime ()); // Save the provided time
         editor.apply();
     }
 
-    private void saveCheckOutTime(String time) {
+    private void saveCheckOutTime() {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(LAST_CHECK_OUT_TIME_KEY, getTodayDateString());
+        editor.putString(LAST_CHECK_OUT_TIME_KEY, getCurrentTime ()); // Save the provided time
         editor.apply();
     }
+
 
     private String getTodayDateString() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -393,4 +398,3 @@ public class LocationWorker extends Worker {
 //        }
 //    }
 }
-
